@@ -18,12 +18,18 @@ export default function InstructorsPage() {
     // 2. Handle Unauthorized Access
     // Check if userProfile exists AND if the user is an instructor
     if (!userProfile || !userProfile.is_instructor) {
+        // FIX: Use a div with vh-100 (viewport height) and flex properties
+        // to center the alert block perfectly on the screen.
         return (
-            <div className="container d-flex justify-content-center align-items-center my-5 text-center alert alert-danger">
-                <h2>Access Denied</h2>
-                <p>You must be logged in as an instructor to view this page.</p>
-                {/* Optional: Add a link to the login/signup page */}
-                <a href="/auth" className="btn btn-primary mt-3">Go to Login</a>
+            <div 
+                className="d-flex justify-content-center align-items-center" 
+                style={{ minHeight: '80vh' }} // Use 80vh-100vh depending on header/footer size
+            >
+                <div className="text-center alert alert-danger p-5 shadow-lg" style={{ maxWidth: '450px' }}>
+                    <h2>Access Denied</h2>
+                    <p className="mt-3">You must be logged in as an instructor to view this page.</p>
+                    <a href="/auth" className="btn btn-primary mt-3">Go to Login</a>
+                </div>
             </div>
         );
     }

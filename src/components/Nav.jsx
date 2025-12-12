@@ -58,7 +58,7 @@ const Nav = () => {
 
     return (
         <nav className="navbar navbar-expand-lg navbar-dark bg-secondary fixed-top shadow">
-            <div className="container">
+            <div className="container fluid">
                 {/* Brand */}
                 <Link className="text-decoration-none" to="/"><span className="navbar-brand">dlp</span></Link>
 
