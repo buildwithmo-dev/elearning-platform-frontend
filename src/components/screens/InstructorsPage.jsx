@@ -19,7 +19,7 @@ export default function InstructorsPage() {
     // Check if userProfile exists AND if the user is an instructor
     if (!userProfile || !userProfile.is_instructor) {
         return (
-            <div className="container my-5 text-center alert alert-danger">
+            <div className="container d-flex justify-content-center align-items-center my-5 text-center alert alert-danger">
                 <h2>Access Denied</h2>
                 <p>You must be logged in as an instructor to view this page.</p>
                 {/* Optional: Add a link to the login/signup page */}
