@@ -45,7 +45,7 @@ function VideoCarousel() {
   );
 
   return (
-    <div className=" my-5 px-0 bg-secondary">
+    <div className="my-5 px-0 bg-secondary">
       <div id="videoCarousel" className="carousel slide" data-bs-ride={hasItems ? "carousel" : ""}>
         
         <div className="carousel-inner">

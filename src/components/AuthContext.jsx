@@ -1,19 +1,16 @@
 import React, { useState, createContext, useContext, useEffect } from 'react';
-import { supabase } from './supabaseClient'; // Adjust this path as necessary for the new file location
+import { supabase } from './supabaseClient'; // adjust path
 
-// 1. Create the Context
 const AuthContext = createContext();
+export const useAuth = () => useContext(AuthContext);
 
-// Hook to easily consume the context
-export const useAuth = () => useContext(AuthContext); // <-- EXPORTED
-
-// Function to get the user's profile data
+// Fetch profile from Supabase
 const getProfile = async (userId) => {
   if (!userId) return null;
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('full_name, is_instructor') 
+      .select('full_name, is_instructor')
       .eq('id', userId)
       .maybeSingle();
 
@@ -25,54 +22,50 @@ const getProfile = async (userId) => {
   }
 };
 
-// 2. Create the Provider Component
-export const AuthProvider = ({ children }) => { // <-- EXPORTED
-  const [userProfile, setUserProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+export const AuthProvider = ({ children }) => {
+  const [userProfile, setUserProfile] = useState(() => {
+    // Try to load cached profile first
+    const saved = localStorage.getItem('userProfile');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [loading, setLoading] = useState(!userProfile); // only loading if no cached profile
 
   useEffect(() => {
-    // Check initial session
     const checkSession = async () => {
-      setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const profile = await getProfile(session.user.id);
-        setUserProfile(profile);
+        const freshProfile = await getProfile(session.user.id);
+        setUserProfile(freshProfile);
+        localStorage.setItem('userProfile', JSON.stringify(freshProfile));
+      } else {
+        setUserProfile(null);
+        localStorage.removeItem('userProfile');
       }
       setLoading(false);
     };
+
     checkSession();
 
-    // Listen for auth changes
+    // Listen to auth state changes
     const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        const profile = await getProfile(session.user.id);
-        setUserProfile(profile);
+        const freshProfile = await getProfile(session.user.id);
+        setUserProfile(freshProfile);
+        localStorage.setItem('userProfile', JSON.stringify(freshProfile));
       } else if (event === 'SIGNED_OUT') {
         setUserProfile(null);
+        localStorage.removeItem('userProfile');
       }
     });
 
     return () => {
-      if (listener?.subscription) {
-        listener.subscription.unsubscribe();
-      }
+      if (listener?.subscription) listener.subscription.unsubscribe();
     };
   }, []);
 
-  const value = {
-    userProfile,
-    loading,
-    setUserProfile,
-    getProfile, // <-- Also export this if handleLogin needs it
-  };
-
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ userProfile, loading, setUserProfile, getProfile }}>
       {children}
     </AuthContext.Provider>
   );
 };
-
-// Export getProfile separately if other components need it, 
-// but here we include it in the context value for the Auth component.

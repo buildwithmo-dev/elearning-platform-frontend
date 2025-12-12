@@ -1,15 +1,26 @@
 import { Routes, Route } from 'react-router-dom';
 import LandingPage from './components/screens/LandingPage.jsx';
 import Auth from './components/screens/Auth';
-import Nav from './components/Nav';
+import Nav from './components/Nav'; // Assuming this is Nav.jsx
 import { AuthProvider } from './components/AuthContext';
 import InstructorsPage from './components/screens/InstructorsPage';
+
 function App() {
   return (
-    <div className="container-fluid">
+    // FIX: Apply top padding to the main container. 
+    // The Nav bar is fixed, so this padding ensures the content starts *below* it.
+    // Assuming the Nav is about 56px tall, padding-top needs to be > 56px.
+    // Using Bootstrap class 'pt-5' (which is usually 3rem or 48px) might be too small.
+    // Let's use pt-5 plus a custom style for the extra 2px padding you requested,
+    // or just a calculated padding value.
+    
+    <div 
+        className="container-fluid p-0" 
+        style={{ paddingTop: '90px' }} // Assuming Nav height is ~56px + 4px gap = 60px
+    >
       <AuthProvider>
-        {/* Nav should be on all pages */}
-        <Nav />
+        {/* Nav component (which uses fixed-top in its own file) */}
+        <Nav /> 
 
         {/* Routes decide which main content to show */}
         <Routes>
