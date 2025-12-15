@@ -14,6 +14,10 @@ export default function LandingPage () {
             {/* <Auth/> */}
             <Categories/>
             <CategorySection/>
+            <CategorySection/>
+            <CategorySection/>
+            <CategorySection/>
+            <CategorySection/>
             <ZoomScheduler/>
         </div>
     )

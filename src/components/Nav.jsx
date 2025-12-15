@@ -26,7 +26,7 @@ const Nav = () => {
             
             return (
                 // Link to user profile settings or dashboard
-                <Link to="/" className="nav-link p-0 d-flex align-items-center">
+                <Link to="/user-page" className="nav-link p-0 d-flex align-items-center">
                     {/* <p
                         className="d-flex align-items-center justify-content-center mx-2"
                         style={{
@@ -100,7 +100,7 @@ const Nav = () => {
                         {/* Conditional User Avatar */}
                         {/* We use a <li> tag if the avatar should align with other nav items, 
                            but since it's an icon/link already, using the component is cleaner. */}
-                        <UserAvatar /> 
+                        <UserAvatar />
                         
                         {/* Settings Icon (independent of login status) */}
                         <Link to="/instructors-page"className="nav-item">

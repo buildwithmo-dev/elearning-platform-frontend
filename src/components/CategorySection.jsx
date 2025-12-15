@@ -17,7 +17,7 @@ export default function CategorySection () {
         fetchCategory()
     }, [])
     return(
-        <div className='container-fluid bg-secondary' style={{minHeight: '300px'}}>
+        <div className='container-fluid bg-secondary mb-5' style={{minHeight: '300px'}}>
 
             <div className="" >
 
