@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-function VideoCarousel() {
+function Carousel() {
 
   const [carouselItems, setCarouselItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -89,4 +89,4 @@ function VideoCarousel() {
   );
 }
 
-export default VideoCarousel;
+export default Carousel;

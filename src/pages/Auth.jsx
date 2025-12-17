@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { supabase } from '../supabaseClient'; // Adjust path if necessary
-// Import the necessary hook and function from the new Context file
-import { useAuth } from '../AuthContext'; 
+import { supabase } from '../services/supabase/supabaseClient';
+import { useAuth } from '../hooks/AuthContext'; 
 
 const Auth = () => {
   // Use the context for user profile management and helpers
@@ -83,7 +82,6 @@ const Auth = () => {
   };
 
   return (
-    // ... rest of your JSX code remains the same ...
     <div
       style={{
         position: 'fixed',

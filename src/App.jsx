@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import LandingPage from './components/screens/LandingPage.jsx';
-import Auth from './components/screens/Auth';
+import LandingPage from './pages/LandingPage.jsx';
+import Auth from './pages/Auth';
 import Nav from './components/Nav';
-import { AuthProvider } from './components/AuthContext';
-import InstructorsPage from './components/screens/InstructorsPage';
-import UserPage from './components/screens/UserPage';
+import { AuthProvider } from './hooks/AuthContext';
+import InstructorsPage from './pages/InstructorsPage';
+import UserAccountPage from './pages/UserAccountPage';
 
 function App() {
 
@@ -24,7 +24,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/instructors-page" element={<InstructorsPage />} />
-        <Route path="/user-page" element={<UserPage />} />
+        <Route path="/user-page" element={<UserAccountPage />} />
       </Routes>
     </AuthProvider>
   );

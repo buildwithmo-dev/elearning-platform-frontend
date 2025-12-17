@@ -1,8 +1,6 @@
-// src/components/screens/InstructorSettingsForm.jsx
-
 import React, { useState, useEffect } from 'react';
-import { useAuth } from './AuthContext'; // Adjust path based on your final context file location
-import { supabase } from './supabaseClient'; // Adjust path to supabase client
+import { useAuth } from '../hooks/AuthContext'; 
+import { supabase } from '../services/supabase/supabaseClient';
 
 export default function InstructorSettingsForm() {
     // Get profile data and setter from the context
@@ -37,7 +35,6 @@ export default function InstructorSettingsForm() {
             const updates = {
                 id: userProfile.id,
                 full_name: fullName,
-                // Note: is_instructor is typically not changed by the user
                 updated_at: new Date(),
             };
 
@@ -94,8 +91,8 @@ export default function InstructorSettingsForm() {
                         className="form-check-input"
                         id="isInstructorCheck"
                         checked={isInstructor}
-                        readOnly // Prevent user from changing status
-                        disabled // Visually indicate it's disabled
+                        readOnly 
+                        disabled
                     />
                     <label className="form-check-label" htmlFor="isInstructorCheck">
                         Registered as Instructor

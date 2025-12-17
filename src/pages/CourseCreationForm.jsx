@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useAuth } from '../AuthContext'; 
+import { useAuth } from '.../hooks/AuthContext'; 
 
 // API Endpoints (Adjust if necessary)
 const CREATE_COURSE_API = 'http://127.0.0.1:8000/api/courses/create/';

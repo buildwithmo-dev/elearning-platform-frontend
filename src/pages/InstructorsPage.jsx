@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../AuthContext';
-import InstructorSettingsForm from '../InstructorSettingsForm'; 
+import { useAuth } from '../hooks/AuthContext';
+import InstructorSettingsForm from '../components/InstructorSettingsForm'; 
 
 export default function InstructorsPage() {
     const { userProfile, loading } = useAuth();

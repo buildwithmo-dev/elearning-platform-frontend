@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../AuthContext";
+import { useAuth } from ".../hooks/AuthContext";
 import {
   fetchMyCourses,
   createCourse,
