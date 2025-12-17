@@ -1,114 +1,129 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/AuthContext'; 
 import { supabase } from '../services/supabase/supabaseClient';
+import { User, ShieldCheck, Save, Loader2 } from 'lucide-react';
 
 export default function InstructorSettingsForm() {
-    // Get profile data and setter from the context
     const { userProfile, setUserProfile } = useAuth();
-
-    // Local state for form inputs
     const [fullName, setFullName] = useState('');
-    const [isInstructor, setIsInstructor] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [message, setMessage] = useState('');
+    const [success, setSuccess] = useState(false);
 
-    // Load initial data from context when component mounts or userProfile updates
     useEffect(() => {
         if (userProfile) {
             setFullName(userProfile.full_name || '');
-            // We use the initial value but typically lock this field
-            setIsInstructor(userProfile.is_instructor || false); 
         }
     }, [userProfile]);
 
     const handleUpdate = async (e) => {
         e.preventDefault();
-        
-        if (!userProfile) return;
-
         setLoading(true);
         setError('');
-        setMessage('');
+        setSuccess(false);
 
         try {
-            const updates = {
-                id: userProfile.id,
-                full_name: fullName,
-                updated_at: new Date(),
-            };
+            // Use the session user ID directly for security
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            if (!user) throw new Error("No authenticated user found");
 
-            // 1. Update the 'profiles' table in Supabase
-            // We only update the full_name here.
             const { error: updateError } = await supabase
                 .from('profiles')
-                .update({ full_name: updates.full_name, updated_at: updates.updated_at })
-                .eq('id', userProfile.id);
+                .update({ 
+                    full_name: fullName, 
+                    updated_at: new Date().toISOString() 
+                })
+                .eq('id', user.id);
 
             if (updateError) throw updateError;
 
-            // 2. Update the global context state with the new full name
-            setUserProfile(prevProfile => ({
-                ...prevProfile,
-                full_name: fullName,
-            }));
+            setUserProfile(prev => ({ ...prev, full_name: fullName }));
+            setSuccess(true);
+            
+            // Clear success message after 3 seconds
+            setTimeout(() => setSuccess(false), 3000);
 
-            setMessage('Profile updated successfully!');
-
-        } catch (updateError) {
-            setError(`Error updating profile: ${updateError.message}`);
+        } catch (err) {
+            setError(err.message);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="card p-4 shadow-sm">
-            <h3>Profile Settings</h3>
-            <p className="text-muted">Update your public name below.</p>
-            
-            {message && <div className="alert alert-success">{message}</div>}
-            {error && <div className="alert alert-danger">{error}</div>}
+        <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div className="card-header bg-white border-bottom-0 pt-4 px-4">
+                <h4 className="fw-bold mb-0">Account Settings</h4>
+                <p className="text-muted small">Manage your profile information and status.</p>
+            </div>
 
-            <form onSubmit={handleUpdate}>
-                {/* Full Name Field */}
-                <div className="mb-3">
-                    <label htmlFor="fullName" className="form-label">Full Name</label>
-                    <input
-                        type="text"
-                        className="form-control"
-                        id="fullName"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        required
-                    />
+            <div className="card-body p-4 pt-0">
+                {/* Profile Header / Avatar Preview */}
+                <div className="d-flex align-items-center mb-4 p-3 bg-light rounded-3">
+                    <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-4 shadow-sm" style={{ width: '60px', height: '60px' }}>
+                        {fullName.charAt(0).toUpperCase() || <User />}
+                    </div>
+                    <div className="ms-3">
+                        <h6 className="mb-1 fw-bold">{fullName || 'User Name'}</h6>
+                        <span className="badge bg-primary-soft text-primary rounded-pill" style={{ backgroundColor: '#e7f0ff', fontSize: '11px' }}>
+                            {userProfile?.is_instructor ? 'Certified Instructor' : 'Student'}
+                        </span>
+                    </div>
                 </div>
 
-                {/* Instructor Status Display (Read-only) */}
-                <div className="form-check mb-4">
-                    <input
-                        type="checkbox"
-                        className="form-check-input"
-                        id="isInstructorCheck"
-                        checked={isInstructor}
-                        readOnly 
-                        disabled
-                    />
-                    <label className="form-check-label" htmlFor="isInstructorCheck">
-                        Registered as Instructor
-                    </label>
-                    {isInstructor && <small className="d-block text-success"> (Status is active and cannot be changed here)</small>}
-                </div>
+                <form onSubmit={handleUpdate}>
+                    <div className="mb-4">
+                        <label className="form-label fw-semibold small text-uppercase text-muted">Public Name</label>
+                        <div className="input-group">
+                            <span className="input-group-text bg-white border-end-0 text-muted">
+                                <User size={18} />
+                            </span>
+                            <input
+                                type="text"
+                                className="form-control border-start-0 ps-0"
+                                placeholder="Enter your full name"
+                                value={fullName}
+                                onChange={(e) => setFullName(e.target.value)}
+                                required
+                            />
+                        </div>
+                    </div>
 
-                {/* Submit Button */}
-                <button 
-                    type="submit" 
-                    className="btn btn-primary" 
-                    disabled={loading}
-                >
-                    {loading ? 'Saving...' : 'Update Profile'}
-                </button>
-            </form>
+                    <div className="mb-4">
+                        <label className="form-label fw-semibold small text-uppercase text-muted">Instructor Authorization</label>
+                        <div className="p-3 border rounded-3 d-flex align-items-center bg-light opacity-75">
+                            <ShieldCheck size={20} className="text-success me-3" />
+                            <div>
+                                <p className="mb-0 small fw-bold">Verified Instructor Account</p>
+                                <p className="mb-0 x-small text-muted">Permission managed by administrator.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="d-flex align-items-center gap-3">
+                        <button 
+                            type="submit" 
+                            className="btn btn-primary px-4 d-flex align-items-center gap-2 rounded-pill shadow-sm"
+                            disabled={loading}
+                        >
+                            {loading ? <Loader2 size={18} className="spinner" /> : <Save size={18} />}
+                            Save Changes
+                        </button>
+
+                        {success && (
+                            <span className="text-success small fw-bold animate-fade-in">
+                                ✓ Updated successfully
+                            </span>
+                        )}
+                        {error && (
+                            <span className="text-danger small">
+                                Error: {error}
+                            </span>
+                        )}
+                    </div>
+                </form>
+            </div>
         </div>
     );
 }

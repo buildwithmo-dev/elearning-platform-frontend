@@ -1,99 +1,121 @@
-import { Link } from 'react-router-dom';
-import { UserCircle, Settings, LogOut } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Settings, LogOut, Menu, User, BookOpen, Bell } from 'lucide-react';
 import { useAuth } from '../hooks/AuthContext';
+import NotificationBell from './NotificationBell';
 
 const Nav = () => {
     const { userProfile, loading, logout } = useAuth();
+    const navigate = useNavigate(); // Initialize navigation
     
     const getUserInitial = () => {
         if (userProfile?.full_name) return userProfile.full_name.charAt(0).toUpperCase();
-        return '';
+        return '?';
     };
 
-    const handleLogout = () => {
-        logout();
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/'); // Send user to main page after successful logout
+        } catch (err) {
+            console.error("Logout failed:", err);
+        }
     };
 
     return (
-        <nav className="navbar navbar-expand-lg navbar-dark bg-secondary fixed-top shadow">
-            <div className="container-fluid">
+        <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow-sm py-2">
+            <div className="container">
                 {/* Brand */}
-                <Link className="text-decoration-none" to="/">
-                    <span className="navbar-brand">dlp</span>
+                <Link className="navbar-brand fw-bold fs-3 text-uppercase tracking-tighter" to="/">
+                    dlp<span className="text-primary">.</span>
                 </Link>
 
-                {/* Toggler for mobile */}
+                {/* Toggler */}
                 <button
-                    className="navbar-toggler"
+                    className="navbar-toggler border-0"
                     type="button"
                     data-bs-toggle="collapse"
                     data-bs-target="#navbarNav"
-                    aria-controls="navbarNav"
-                    aria-expanded="false"
-                    aria-label="Toggle navigation"
                 >
-                    <span className="navbar-toggler-icon"></span>
+                    <Menu size={24} color="white" />
                 </button>
 
-                {/* Navigation links */}
                 <div className="collapse navbar-collapse" id="navbarNav">
-                    <ul className="navbar-nav ms-auto align-items-center">
-                        {["one","two","three","four","five","six"].map((link,i)=>(
-                            <li className="nav-item" key={i}>
-                                <Link className="nav-link text-decoration-none" to={`/link-${link}`}>
-                                    Link {link.charAt(0).toUpperCase()+link.slice(1)}
-                                </Link>
-                            </li>
-                        ))}
-
-                        {/* User Avatar */}
+                    <ul className="navbar-nav ms-auto align-items-center gap-2">
+                        {/* Example Links */}
                         <li className="nav-item">
-                            {loading ? (
-                                <div style={{ width: 24, height: 24, marginLeft: 8 }}></div>
-                            ) : userProfile ? (
-                                <Link to="/user-page" className="nav-link d-flex align-items-center">
-                                    <span
-                                        className="d-flex justify-content-center align-items-center"
+                            <Link className="nav-link px-3" to="/courses">Courses</Link>
+                        </li>
+
+                        {/* Vertical Divider */}
+                        <div className="vr d-none d-lg-block mx-2 text-white opacity-25" style={{ height: '20px' }}></div>
+
+                        {/* Auth Logic */}
+                        {loading ? (
+                            <div className="spinner-border spinner-border-sm text-light mx-3" role="status"></div>
+                        ) : userProfile ? (
+                            <li className="nav-item dropdown">
+                                {/* Profile Avatar Toggle */}
+                                <a
+                                    className="nav-link dropdown-toggle d-flex align-items-center p-0 no-caret"
+                                    href="#"
+                                    role="button"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false"
+                                >
+                                    <div
+                                        className="d-flex justify-content-center align-items-center shadow-sm border border-light border-opacity-25 bg-primary text-white fw-bold"
                                         style={{
-                                            width: '24px',
-                                            height: '24px',
+                                            width: '38px',
+                                            height: '38px',
                                             borderRadius: '50%',
-                                            backgroundColor: '#335981ff',
-                                            color: 'white',
-                                            fontWeight: 'bold',
-                                            fontSize: '14px'
+                                            transition: 'transform 0.2s'
                                         }}
-                                        title={userProfile.full_name}
                                     >
                                         {getUserInitial()}
-                                    </span>
-                                </Link>
-                            ) : (
-                                <Link to="/auth" className="nav-link">
-                                    <UserCircle size={24} color="white" />
-                                </Link>
-                            )}
-                        </li>
+                                    </div>
+                                </a>
+                                <Bell size={24}/><span><NotificationBell/></span>
 
-                        {/* Settings Icon */}
-                        <li className="nav-item">
-                            <Link to="/instructors-page" className="nav-link">
-                                <Settings size={24} color="white" />
-                            </Link>
-                        </li>
-
-                        {/* Sign Out */}
-                        {userProfile && (
-                        <li className="nav-item">
-                            <button
-                            className="btn nav-link"
-                            style={{ background: 'none', border: 'none', padding: 0 }}
-                            title="Sign Out"
-                            onClick={logout}
-                            >
-                            <LogOut size={24} color="white" />
-                            </button>
-                        </li>
+                                {/* Dropdown Menu */}
+                                <ul className="dropdown-menu dropdown-menu-end shadow border-0 mt-3 p-2 animate-fade-in" style={{ borderRadius: '12px', minWidth: '200px' }}>
+                                    <li className="px-3 py-2 border-bottom mb-2">
+                                        <p className="small text-muted mb-0">Signed in as</p>
+                                        <p className="fw-bold mb-0 text-dark">{userProfile.full_name}</p>
+                                    </li>
+                                    <li>
+                                        <Link className="dropdown-item rounded-3 d-flex align-items-center gap-2 py-2" to="/user-page">
+                                            <User size={16} /> My Profile
+                                        </Link>
+                                    </li>
+                                    {userProfile.is_instructor && (
+                                        <li>
+                                            <Link className="dropdown-item rounded-3 d-flex align-items-center gap-2 py-2" to="/instructors-page">
+                                                <BookOpen size={16} /> Instructor Studio
+                                            </Link>
+                                        </li>
+                                    )}
+                                    <li>
+                                        <Link className="dropdown-item rounded-3 d-flex align-items-center gap-2 py-2" to="/settings">
+                                            <Settings size={16} /> Settings
+                                        </Link>
+                                    </li>
+                                    <li><hr className="dropdown-divider" /></li>
+                                    <li>
+                                        <button
+                                            className="dropdown-item rounded-3 d-flex align-items-center gap-2 py-2 text-danger"
+                                            onClick={handleLogout}
+                                        >
+                                            <LogOut size={16} /> Sign Out
+                                        </button>
+                                    </li>
+                                </ul>
+                            </li>
+                        ) : (
+                            <li className="nav-item">
+                                <Link to="/auth" className="btn btn-primary rounded-pill px-4 ms-lg-2 fw-bold shadow-sm">
+                                    Sign In
+                                </Link>
+                            </li>
                         )}
                     </ul>
                 </div>

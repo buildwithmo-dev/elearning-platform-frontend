@@ -1,27 +1,139 @@
-import {useState, useEffect} from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { ChevronRight, FolderOpen, Layers, Code, Cpu, Database, Globe } from 'lucide-react';
 
-export default function CategorySection () {
-    const api = "http://127.0.0.1:8000/api/courses/category-section"
+export default function CategorySection() {
+    const navigate = useNavigate();
+    const api = "http://127.0.0.1:8000/api/courses/category-section";
 
-    const [category, setCategory] = useState([])
-    const [loading, setLoading] = useState(null)
-    const [error, setError] = useState(null)
+    const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchCategory = async () => {
-            const res = axios.get(api)
-            setCategory(res.data)
-        }
+            try {
+                setLoading(true);
+                const res = await axios.get(api);
+                // Assuming res.data is the array of categories
+                setCategories(res.data);
+            } catch (err) {
+                setError("Could not load categories.");
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchCategory();
+    }, []);
 
-        fetchCategory()
-    }, [])
-    return(
-        <div className='container-fluid bg-secondary mb-5' style={{minHeight: '300px'}}>
+    // Helper to render dynamic icons based on title or ID
+    const getCategoryIcon = (title) => {
+        const t = title.toLowerCase();
+        if (t.includes('code') || t.includes('program')) return <Code size={32} />;
+        if (t.includes('data') || t.includes('sql')) return <Database size={32} />;
+        if (t.includes('web') || t.includes('design')) return <Globe size={32} />;
+        if (t.includes('tech') || t.includes('hardware')) return <Cpu size={32} />;
+        return <Layers size={32} />;
+    };
 
-            <div className="" >
+    return (
+        <section className='py-5 bg-light' style={{ minHeight: '400px' }}>
+            <div className='container py-4'>
+                {/* Header Row */}
+                <div className="row align-items-center mb-5">
+                    <div className="col-md-7">
+                        <span className="badge bg-primary-soft text-primary px-3 py-2 rounded-pill mb-2" style={{ backgroundColor: '#e7f0ff' }}>
+                            Top Categories
+                        </span>
+                        <h2 className="fw-bold display-6">What do you want to learn?</h2>
+                        <p className="text-muted fs-5">Choose from our most popular industries and start your journey.</p>
+                    </div>
+                    <div className="col-md-5 text-md-end">
+                        <button 
+                            className="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm d-inline-flex align-items-center gap-2"
+                            onClick={() => navigate('/courses')}
+                        >
+                            View All Categories <ChevronRight size={18} />
+                        </button>
+                    </div>
+                </div>
 
+                {/* Categories Grid */}
+                <div className="row g-4">
+                    {loading ? (
+                        // Skeleton Loaders: 4 cards that pulse
+                        [1, 2, 3, 4].map((n) => (
+                            <div key={n} className="col-6 col-md-3">
+                                <div className="card border-0 shadow-sm p-4 text-center animate-pulse" style={{ height: '160px', backgroundColor: '#fff' }}>
+                                    <div className="placeholder-glow">
+                                        <div className="rounded-circle bg-light mx-auto mb-3" style={{ width: '50px', height: '50px' }}></div>
+                                        <span className="placeholder col-8 rounded"></span>
+                                        <span className="placeholder col-5 rounded mt-2"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    ) : error ? (
+                        <div className="col-12 text-center py-5">
+                            <div className="alert alert-danger d-inline-block px-5">{error}</div>
+                        </div>
+                    ) : (
+                        categories.map((cat) => (
+                            <div 
+                                key={cat.id} 
+                                className="col-6 col-md-3"
+                                onClick={() => navigate(`/courses?category=${cat.id}`)}
+                            >
+                                <div className="card h-100 border-0 shadow-sm category-card text-center p-4">
+                                    <div className="card-body d-flex flex-column align-items-center justify-content-center">
+                                        <div className="icon-wrapper mb-3 text-primary transition-all">
+                                            {getCategoryIcon(cat.title)}
+                                        </div>
+                                        <h5 className="fw-bold mb-1 card-title-text">{cat.title}</h5>
+                                        <p className="text-muted small mb-0">{cat.course_count || 0} Courses</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
             </div>
-        </div>
-    )
+            
+            <style>{`
+                .category-card {
+                    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+                    cursor: pointer;
+                    border-radius: 20px;
+                }
+                .category-card:hover {
+                    transform: translateY(-12px);
+                    background-color: #0d6efd;
+                    box-shadow: 0 15px 30px rgba(13, 110, 253, 0.2) !important;
+                }
+                .category-card:hover .card-title-text,
+                .category-card:hover .text-muted,
+                .category-card:hover .icon-wrapper {
+                    color: white !important;
+                }
+                .icon-wrapper {
+                    background: #f8f9fa;
+                    padding: 15px;
+                    border-radius: 15px;
+                }
+                .category-card:hover .icon-wrapper {
+                    background: rgba(255, 255, 255, 0.2);
+                }
+                .animate-pulse {
+                    animation: pulse 1.5s infinite;
+                }
+                @keyframes pulse {
+                    0% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                    100% { opacity: 1; }
+                }
+            `}</style>
+        </section>
+    );
 }

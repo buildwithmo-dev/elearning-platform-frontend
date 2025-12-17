@@ -1,88 +1,80 @@
-// AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { supabase } from "../services/supabase/supabaseClient"; // Adjust path if needed
+import { supabase } from "../services/supabase/supabaseClient";
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
-// Helper to fetch profile from Supabase
-const getProfile = async (userId) => {
-  if (!userId) return null;
-  try {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("full_name, is_instructor")
-      .eq("id", userId)
-      .maybeSingle();
+export const AuthProvider = ({ children }) => {
+  const [userProfile, setUserProfile] = useState(null);
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error("Error fetching profile:", error);
-    return null;
-  }
-};
-
- const logout = async () => {
-    await supabase.auth.signOut();
-    setUserProfile(null);
+  // Helper inside the provider
+  const fetchAndSetProfile = async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name, is_instructor")
+        .eq("id", userId)
+        .maybeSingle();
+      if (error) throw error;
+      setUserProfile(data);
+    } catch (error) {
+      console.error("Profile fetch error:", error);
+      setUserProfile(null);
+    }
   };
 
-export const AuthProvider = ({ children }) => {
-  const [userProfile, setUserProfile] = useState(() => {
-    const saved = localStorage.getItem("userProfile");
-    return saved ? JSON.parse(saved) : null;
-  });
-  const [session, setSession] = useState(() => {
-    const saved = localStorage.getItem("session");
-    return saved ? JSON.parse(saved) : null;
-  });
-  const [loading, setLoading] = useState(!userProfile);
+  // The Logout Function (Now correctly scoped)
+  const logout = async () => {
+    try {
+      setLoading(true);
+      await supabase.auth.signOut();
+      // State is cleared automatically by onAuthStateChange, 
+      // but we force it here for immediate UI feedback
+      setUserProfile(null);
+      setSession(null);
+    } catch (error) {
+      console.error("Error logging out:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const initAuth = async () => {
-      setLoading(true);
-
-      // Get current session from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
+    // 1. Check active session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session) {
-        localStorage.setItem("session", JSON.stringify(session));
-        const profile = await getProfile(session.user.id);
-        setUserProfile(profile);
-        localStorage.setItem("userProfile", JSON.stringify(profile));
-      } else {
-        setUserProfile(null);
-        localStorage.removeItem("userProfile");
-        localStorage.removeItem("session");
-      }
-
+      if (session) fetchAndSetProfile(session.user.id);
       setLoading(false);
-    };
-
-    initAuth();
-
-    // Listen to auth changes
-    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      if (session) {
-        localStorage.setItem("session", JSON.stringify(session));
-        const profile = await getProfile(session.user.id);
-        setUserProfile(profile);
-        localStorage.setItem("userProfile", JSON.stringify(profile));
-      } else {
-        setUserProfile(null);
-        setSession(null);
-        localStorage.removeItem("userProfile");
-        localStorage.removeItem("session");
-      }
     });
 
-    return () => {
-      if (listener?.subscription) listener.subscription.unsubscribe();
-    };
+    // 2. Listen for Auth Changes (Sign In, Sign Out, Token Refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session);
+      
+      if (event === 'SIGNED_IN' && session) {
+        await fetchAndSetProfile(session.user.id);
+      } else if (event === 'SIGNED_OUT') {
+        setUserProfile(null);
+        setSession(null);
+        // Clear any local cache if you use it
+        localStorage.removeItem("supabase.auth.token"); 
+      }
+      
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const value = { userProfile, session, loading, setUserProfile, getProfile,logout };
+  const value = { 
+    userProfile, 
+    session, 
+    loading, 
+    logout, // Shared via context
+    setUserProfile 
+  };
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
