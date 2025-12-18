@@ -10,7 +10,8 @@ import UserAccountPage from './pages/UserAccountPage';
 import CoursesPage from './pages/CoursesPage';
 import SettingsPage from './pages/SettingsPage';
 import ContactSupport from './pages/ContactSupport';
-
+import StudentCoursesPage from "./pages/StudentCoursesPage";
+import StudentCourseDetailPage from "./pages/StudentCourseDetailPage";
 function App() {
 
   useEffect(() => {
@@ -32,6 +33,8 @@ function App() {
         <Route path="/courses" element={<CoursesPage/>}/>
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/support" element={<ContactSupport />} />
+        <Route path="/my-courses" element={<StudentCoursesPage />} />
+        <Route path="/course/:courseId" element={<StudentCourseDetailPage />} />
       </Routes>
 
       <Footer/>

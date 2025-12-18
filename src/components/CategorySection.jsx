@@ -1,7 +1,17 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronRight, FolderOpen, Layers, Code, Cpu, Database, Globe } from 'lucide-react';
+import { 
+    ChevronRight, 
+    Layers, 
+    Code, 
+    Cpu, 
+    Database, 
+    Globe, 
+    Smartphone, 
+    Palette, 
+    ShieldCheck 
+} from 'lucide-react';
 
 export default function CategorySection() {
     const navigate = useNavigate();
@@ -15,12 +25,12 @@ export default function CategorySection() {
         const fetchCategory = async () => {
             try {
                 setLoading(true);
+                // Standard GET request - no auth headers needed for public browsing
                 const res = await axios.get(api);
-                // Assuming res.data is the array of categories
                 setCategories(res.data);
             } catch (err) {
                 setError("Could not load categories.");
-                console.error(err);
+                console.error("Fetch Error:", err);
             } finally {
                 setLoading(false);
             }
@@ -28,71 +38,83 @@ export default function CategorySection() {
         fetchCategory();
     }, []);
 
-    // Helper to render dynamic icons based on title or ID
+    /**
+     * Maps icons to your specific database categories.
+     * Handles potential leading/trailing spaces from older data entries.
+     */
     const getCategoryIcon = (title) => {
-        const t = title.toLowerCase();
-        if (t.includes('code') || t.includes('program')) return <Code size={32} />;
-        if (t.includes('data') || t.includes('sql')) return <Database size={32} />;
-        if (t.includes('web') || t.includes('design')) return <Globe size={32} />;
-        if (t.includes('tech') || t.includes('hardware')) return <Cpu size={32} />;
+        const t = title.toLowerCase().trim();
+        if (t.includes('web')) return <Code size={32} />;
+        if (t.includes('data science') || t.includes('ai') || t.includes('ml')) return <Cpu size={32} />;
+        if (t.includes('data analysis')) return <Database size={32} />;
+        if (t.includes('cyber')) return <ShieldCheck size={32} />;
+        if (t.includes('cloud')) return <Globe size={32} />;
+        if (t.includes('mobile')) return <Smartphone size={32} />;
+        if (t.includes('ui') || t.includes('ux')) return <Palette size={32} />;
         return <Layers size={32} />;
     };
 
     return (
         <section className='py-5 bg-light' style={{ minHeight: '400px' }}>
             <div className='container py-4'>
-                {/* Header Row */}
+                {/* --- Header Section --- */}
                 <div className="row align-items-center mb-5">
                     <div className="col-md-7">
-                        <span className="badge bg-primary-soft text-primary px-3 py-2 rounded-pill mb-2" style={{ backgroundColor: '#e7f0ff' }}>
-                            Top Categories
+                        <span className="badge px-3 py-2 rounded-pill mb-2" style={{ backgroundColor: '#e7f0ff', color: '#0d6efd' }}>
+                            Explore Industries
                         </span>
                         <h2 className="fw-bold display-6">What do you want to learn?</h2>
-                        <p className="text-muted fs-5">Choose from our most popular industries and start your journey.</p>
+                        <p className="text-muted fs-5">Choose from our top categories and start your journey.</p>
                     </div>
                     <div className="col-md-5 text-md-end">
                         <button 
                             className="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm d-inline-flex align-items-center gap-2"
                             onClick={() => navigate('/courses')}
                         >
-                            View All Categories <ChevronRight size={18} />
+                            Browse All Courses <ChevronRight size={18} />
                         </button>
                     </div>
                 </div>
 
-                {/* Categories Grid */}
+                {/* --- Categories Grid --- */}
                 <div className="row g-4">
                     {loading ? (
-                        // Skeleton Loaders: 4 cards that pulse
-                        [1, 2, 3, 4].map((n) => (
+                        // Skeleton Loaders
+                        [1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
                             <div key={n} className="col-6 col-md-3">
-                                <div className="card border-0 shadow-sm p-4 text-center animate-pulse" style={{ height: '160px', backgroundColor: '#fff' }}>
+                                <div className="card border-0 shadow-sm p-4 text-center animate-pulse" style={{ height: '180px', borderRadius: '20px' }}>
                                     <div className="placeholder-glow">
-                                        <div className="rounded-circle bg-light mx-auto mb-3" style={{ width: '50px', height: '50px' }}></div>
-                                        <span className="placeholder col-8 rounded"></span>
-                                        <span className="placeholder col-5 rounded mt-2"></span>
+                                        <div className="rounded-circle bg-light mx-auto mb-3" style={{ width: '60px', height: '60px' }}></div>
+                                        <div className="placeholder col-8 rounded mb-2" style={{ height: '15px' }}></div>
+                                        <div className="placeholder col-5 rounded" style={{ height: '10px' }}></div>
                                     </div>
                                 </div>
                             </div>
                         ))
                     ) : error ? (
                         <div className="col-12 text-center py-5">
-                            <div className="alert alert-danger d-inline-block px-5">{error}</div>
+                            <div className="alert alert-danger d-inline-block px-5 shadow-sm rounded-4">{error}</div>
                         </div>
                     ) : (
                         categories.map((cat) => (
                             <div 
                                 key={cat.id} 
                                 className="col-6 col-md-3"
-                                onClick={() => navigate(`/courses?category=${cat.id}`)}
+                                // Navigation uses encoded title for clean, readable URLs
+                                onClick={() => navigate(`/courses?category=${encodeURIComponent(cat.title.trim())}`)}
                             >
                                 <div className="card h-100 border-0 shadow-sm category-card text-center p-4">
                                     <div className="card-body d-flex flex-column align-items-center justify-content-center">
                                         <div className="icon-wrapper mb-3 text-primary transition-all">
                                             {getCategoryIcon(cat.title)}
                                         </div>
-                                        <h5 className="fw-bold mb-1 card-title-text">{cat.title}</h5>
-                                        <p className="text-muted small mb-0">{cat.course_count || 0} Courses</p>
+                                        <h5 className="fw-bold mb-1 card-title-text text-dark">
+                                            {cat.title}
+                                        </h5>
+                                        {/* Display real course count from your updated backend */}
+                                        <p className="text-muted small mb-0">
+                                            {cat.course_count || 0} {cat.course_count === 1 ? 'Course' : 'Courses'}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -106,10 +128,11 @@ export default function CategorySection() {
                     transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
                     cursor: pointer;
                     border-radius: 20px;
+                    background-color: white;
                 }
                 .category-card:hover {
                     transform: translateY(-12px);
-                    background-color: #0d6efd;
+                    background-color: #0d6efd !important;
                     box-shadow: 0 15px 30px rgba(13, 110, 253, 0.2) !important;
                 }
                 .category-card:hover .card-title-text,
@@ -121,6 +144,9 @@ export default function CategorySection() {
                     background: #f8f9fa;
                     padding: 15px;
                     border-radius: 15px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                 }
                 .category-card:hover .icon-wrapper {
                     background: rgba(255, 255, 255, 0.2);
