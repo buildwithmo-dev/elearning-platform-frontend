@@ -20,7 +20,7 @@ export default function StudentCourseDetailPage() {
   useEffect(() => {
     const fetchCurriculum = async () => {
       try {
-        const res = await fetch(`https://elearning-platform-backend-seven.vercel.app//api/courses/${courseId}/`);
+        const res = await fetch(`https://elearning-platform-backend-seven.vercel.app/api/courses/${courseId}/`);
         const data = await res.json();
 
         if (Array.isArray(data)) {

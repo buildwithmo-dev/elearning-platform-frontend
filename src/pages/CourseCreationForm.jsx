@@ -3,8 +3,8 @@ import axios from "axios";
 import { useAuth } from "../hooks/AuthContext";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 
-const CREATE_COURSE_API = "https://elearning-platform-backend-seven.vercel.app//api/courses/create/";
-const CATEGORIES_API = "https://elearning-platform-backend-seven.vercel.app//api/courses/categories/";
+const CREATE_COURSE_API = "https://elearning-platform-backend-seven.vercel.app/api/courses/create/";
+const CATEGORIES_API = "https://elearning-platform-backend-seven.vercel.app/api/courses/categories/";
 
 export default function CourseCreationForm() {
   const { userProfile } = useAuth();

@@ -28,7 +28,7 @@ export default function ZoomScheduler() {
 
     try {
       const res = await axios.post(
-        "https://elearning-platform-backend-seven.vercel.app/api/zoom/create-meeting/",
+        "https://elearning-platform-backend-seven.vercel.appapi/zoom/create-meeting/",
         { topic, start_time: startTime, duration }
       );
       setMeetingInfo(res.data);

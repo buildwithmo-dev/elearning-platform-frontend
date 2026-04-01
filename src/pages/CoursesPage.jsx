@@ -26,11 +26,11 @@ export default function CoursesPage() {
       try {
         setLoading(true);
         const [catRes, courseRes] = await Promise.all([
-          axios.get("https://elearning-platform-backend-seven.vercel.app//api/courses/category-section"),
+          axios.get("https://elearning-platform-backend-seven.vercel.app/api/courses/category-section"),
           axios.get(
             activeCategoryId
-              ? `https://elearning-platform-backend-seven.vercel.app//api/courses/?category=${activeCategoryId}`
-              : `https://elearning-platform-backend-seven.vercel.app//api/courses/`
+              ? `https://elearning-platform-backend-seven.vercel.app/api/courses/?category=${activeCategoryId}`
+              : `https://elearning-platform-backend-seven.vercel.app/api/courses/`
           ),
         ]);
         setCategories(catRes.data);

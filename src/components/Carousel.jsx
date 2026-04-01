@@ -11,7 +11,7 @@ function Carousel() {
   const [isHovered, setIsHovered] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const API_ENDPOINT = "https://elearning-platform-backend-seven.vercel.app//api/resources/slides/";
+  const API_ENDPOINT = "https://elearning-platform-backend-seven.vercel.app/api/resources/slides/";
 
   const fallback = [
     {

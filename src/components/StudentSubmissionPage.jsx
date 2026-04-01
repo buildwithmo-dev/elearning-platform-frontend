@@ -16,7 +16,7 @@ export default function StudentSubmissionPage() {
   useEffect(() => {
     const fetchLessons = async () => {
       try {
-        const res = await fetch(`https://elearning-platform-backend-seven.vercel.app//api/courses/${courseId}/lessons/`);
+        const res = await fetch(`https://elearning-platform-backend-seven.vercel.app/api/courses/${courseId}/lessons/`);
         const data = await res.json();
         setLessons(data.filter((l) => l.content_type === "sandbox"));
       } catch (err) {
@@ -36,7 +36,7 @@ export default function StudentSubmissionPage() {
 
     try {
       const res = await fetch(
-        `https://elearning-platform-backend-seven.vercel.app//api/courses/${courseId}/lessons/${lessonId}/submit/`,
+        `https://elearning-platform-backend-seven.vercel.app/api/courses/${courseId}/lessons/${lessonId}/submit/`,
         {
           method: "POST",
           headers: {
