@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { BookOpen } from "lucide-react";
 
 export default function Categories() {
-  const api = "http://127.0.0.1:8000/api/courses/categories/";
+  const api = "https://elearning-platform-backend-seven.vercel.app//api/courses/categories/";
   const navigate = useNavigate();
 
   const [categories, setCategories] = useState([]);

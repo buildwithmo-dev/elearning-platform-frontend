@@ -85,7 +85,7 @@ const Auth = () => {
     options: {
       // This ensures that after Google login, it brings the user 
       // back to your local development site
-      redirectTo: 'http://localhost:5173', 
+      redirectTo: 'https://elearning-platform-frontend-one.vercel.app/', 
     },
   });
   

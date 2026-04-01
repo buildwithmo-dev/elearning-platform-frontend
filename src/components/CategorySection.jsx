@@ -16,7 +16,7 @@ import {
 
 export default function CategorySection() {
     const navigate = useNavigate();
-    const api = "http://127.0.0.1:8000/api/courses/category-section";
+    const api = "https://elearning-platform-backend-seven.vercel.app//api/courses/category-section";
 
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);

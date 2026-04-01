@@ -12,7 +12,7 @@ export default function StudentCoursesPage() {
     const fetchCourses = async () => {
       try {
         setLoading(true);
-        const res = await fetch("http://127.0.0.1:8000/api/student/courses/");
+        const res = await fetch("https://elearning-platform-backend-seven.vercel.app//api/student/courses/");
         const data = await res.json();
         setCourses(data);
       } catch (err) {
