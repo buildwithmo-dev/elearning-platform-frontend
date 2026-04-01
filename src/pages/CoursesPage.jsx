@@ -10,6 +10,9 @@ import {
   XCircle,
 } from "lucide-react";
 
+// Use environment variable for the backend URL
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://elearning-platform-backend-seven.vercel.app/api";
+
 export default function CoursesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -25,18 +28,19 @@ export default function CoursesPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
+        // Added trailing slashes to API endpoints to prevent 308 redirect issues in production
         const [catRes, courseRes] = await Promise.all([
-          axios.get("https://elearning-platform-backend-seven.vercel.app/api/courses/category-section"),
+          axios.get(`${API_BASE}/courses/category-section/`),
           axios.get(
             activeCategoryId
-              ? `https://elearning-platform-backend-seven.vercel.app/api/courses/?category=${activeCategoryId}`
-              : `https://elearning-platform-backend-seven.vercel.app/api/courses/`
+              ? `${API_BASE}/courses/?category=${activeCategoryId}`
+              : `${API_BASE}/courses/`
           ),
         ]);
         setCategories(catRes.data);
         setCourses(courseRes.data);
       } catch (err) {
-        console.error(err);
+        console.error("Fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -57,170 +61,163 @@ export default function CoursesPage() {
     const params = Object.fromEntries([...searchParams]);
 
     if (!searchQuery.trim()) {
-      delete params.q;
-      setSearchParams(params);
+      const newParams = { ...params };
+      delete newParams.q;
+      setSearchParams(newParams);
     } else {
       setSearchParams({ ...params, q: searchQuery });
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-20 px-6 lg:px-12">
-
-      {/* HEADER */}
-      <div className="max-w-7xl mx-auto mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          {activeCategoryId || "Explore Courses"}
-        </h1>
-        <p className="text-gray-500 text-sm mt-1">
-          {filteredCourses.length} courses available
-        </p>
-      </div>
-
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
-
-        {/* SIDEBAR */}
-        <div className="backdrop-blur-xl bg-white/70 border border-white/40 rounded-3xl p-5 h-fit sticky top-24 shadow-xl">
-
-          {/* SEARCH */}
-          <form onSubmit={handleSearchSubmit} className="mb-6">
-            <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-2 border shadow-sm focus-within:ring-2 focus-within:ring-black">
-              <Search size={16} className="text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search courses..."
-                className="w-full bg-transparent outline-none text-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </form>
-
-          {/* FILTERS */}
-          <div>
-            <h4 className="text-xs font-semibold text-gray-400 uppercase mb-3 flex items-center gap-2">
-              <Filter size={14} /> Categories
-            </h4>
-
-            <div className="space-y-1">
-              <button
-                onClick={() => {
-                  setSearchParams({});
-                  setSearchQuery("");
-                }}
-                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
-                  !activeCategoryId
-                    ? "bg-black text-white"
-                    : "hover:bg-gray-100 text-gray-600"
-                }`}
-              >
-                <LayoutGrid size={14} className="inline mr-2" />
-                All Courses
-              </button>
-
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    setSearchParams({ category: cat.title });
-                    setSearchQuery("");
-                  }}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
-                    activeCategoryId === cat.title
-                      ? "bg-black text-white"
-                      : "hover:bg-gray-100 text-gray-600"
-                  }`}
-                >
-                  {cat.title}
-                </button>
-              ))}
-            </div>
-          </div>
+    <div className="min-h-screen bg-gray-50 pt-28 pb-12 px-4 md:px-8 lg:px-12">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* HEADER */}
+        <div className="mb-10">
+          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight capitalize">
+            {activeCategoryId || "Explore Courses"}
+          </h1>
+          <p className="text-gray-500 mt-2 text-lg">
+            {filteredCourses.length} high-quality courses available
+          </p>
         </div>
 
-        {/* COURSE GRID */}
-        <div className="lg:col-span-3">
-
-          {loading ? (
-            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-64 rounded-2xl bg-gray-200 animate-pulse"
+        {/* Use Flex instead of Grid for the main layout to prevent sidebar/content overlap */}
+        <div className="flex flex-col lg:flex-row gap-8">
+          
+          {/* SIDEBAR - Fixed Width and Sticky */}
+          <aside className="w-full lg:w-72 flex-shrink-0">
+            <div className="sticky top-28 space-y-6 z-10">
+              
+              {/* SEARCH */}
+              <form onSubmit={handleSearchSubmit} className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search size={18} className="text-gray-400 group-focus-within:text-black transition-colors" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search courses..."
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-2xl bg-white shadow-sm focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all text-sm"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
-              ))}
+              </form>
+
+              {/* FILTERS */}
+              <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <Filter size={14} /> Categories
+                </h4>
+
+                <div className="flex flex-col gap-1">
+                  <button
+                    onClick={() => {
+                      setSearchParams({});
+                      setSearchQuery("");
+                    }}
+                    className={`flex items-center gap-2 w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      !activeCategoryId
+                        ? "bg-black text-white shadow-md"
+                        : "hover:bg-gray-50 text-gray-600"
+                    }`}
+                  >
+                    <LayoutGrid size={16} /> All Courses
+                  </button>
+
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => {
+                        setSearchParams({ category: cat.title });
+                        setSearchQuery("");
+                      }}
+                      className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                        activeCategoryId === cat.title
+                          ? "bg-black text-white shadow-md"
+                          : "hover:bg-gray-50 text-gray-600"
+                      }`}
+                    >
+                      {cat.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-          ) : filteredCourses.length > 0 ? (
-            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+          </aside>
 
-              {filteredCourses.map((course) => (
-                <div
-                  key={course.id}
-                  className="group bg-white rounded-2xl shadow-sm border hover:shadow-lg transition overflow-hidden"
-                >
-                  {/* IMAGE */}
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={
-                        course.thumbnail ||
-                        "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600"
-                      }
-                      className="h-44 w-full object-cover group-hover:scale-105 transition duration-300"
-                    />
-                    <span className="absolute top-3 right-3 bg-black text-white text-xs px-3 py-1 rounded-full">
-                      {course.price == 0 ? "Free" : `$${course.price}`}
-                    </span>
-                  </div>
-
-                  {/* CONTENT */}
-                  <div className="p-4 flex flex-col">
-                    <h3 className="font-semibold text-gray-900 line-clamp-2">
-                      {course.title}
-                    </h3>
-
-                    <div className="flex items-center gap-4 text-xs text-gray-500 mt-3">
-                      <span className="flex items-center gap-1">
-                        <BookOpen size={14} />
-                        {course.lesson_count || 0}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Star size={14} className="text-yellow-500" />
-                        4.8
-                      </span>
+          {/* COURSE GRID */}
+          <main className="flex-1">
+            {loading ? (
+              <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="h-72 rounded-3xl bg-gray-200 animate-pulse" />
+                ))}
+              </div>
+            ) : filteredCourses.length > 0 ? (
+              <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredCourses.map((course) => (
+                  <div key={course.id} className="group bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                    
+                    {/* IMAGE */}
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={course.thumbnail || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600"}
+                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                        alt={course.title}
+                      />
+                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                        {course.price == 0 ? "FREE" : `$${course.price}`}
+                      </div>
                     </div>
 
-                    <Link
-                      to={`/course/${course.id}`}
-                      className="mt-5 text-sm font-medium text-black hover:underline"
-                    >
-                      View Course →
-                    </Link>
+                    {/* CONTENT */}
+                    <div className="p-5">
+                      <h3 className="font-bold text-gray-900 text-lg leading-tight line-clamp-2 h-14">
+                        {course.title}
+                      </h3>
+                      
+                      <div className="flex items-center justify-between mt-4">
+                        <div className="flex items-center gap-3 text-gray-500 text-xs">
+                          <span className="flex items-center gap-1 font-medium">
+                            <BookOpen size={14} className="text-blue-500" /> 
+                            {course.lesson_count || 0} Lessons
+                          </span>
+                          <span className="flex items-center gap-1 font-medium">
+                            <Star size={14} className="text-yellow-500 fill-yellow-500" /> 
+                            4.8
+                          </span>
+                        </div>
+                      </div>
+
+                      <Link
+                        to={`/course/${course.id}`}
+                        className="mt-5 block w-full text-center py-3 bg-gray-50 hover:bg-black hover:text-white rounded-2xl text-sm font-bold transition-colors"
+                      >
+                        View Course Details
+                      </Link>
+                    </div>
                   </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-24 bg-white rounded-[40px] border border-dashed border-gray-200 text-center">
+                <div className="bg-gray-50 p-6 rounded-full mb-4">
+                  <XCircle size={40} className="text-gray-300" />
                 </div>
-              ))}
-
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl shadow-sm border text-center">
-              <XCircle size={48} className="text-gray-300 mb-3" />
-              <h3 className="font-semibold text-lg">
-                No results for "{searchQuery}"
-              </h3>
-              <p className="text-gray-500 text-sm mt-1">
-                Try a different keyword
-              </p>
-              <button
-                onClick={() => {
-                  setSearchQuery("");
-                  setSearchParams({});
-                }}
-                className="mt-4 px-4 py-2 bg-black text-white rounded-xl text-sm"
-              >
-                Reset Filters
-              </button>
-            </div>
-          )}
-
+                <h3 className="font-bold text-xl text-gray-900">No courses found</h3>
+                <p className="text-gray-500 max-w-xs mx-auto mt-2">
+                  We couldn't find anything matching "{searchQuery}".
+                </p>
+                <button
+                  onClick={() => { setSearchQuery(""); setSearchParams({}); }}
+                  className="mt-6 px-8 py-3 bg-black text-white rounded-2xl font-bold text-sm hover:scale-105 transition-transform"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            )}
+          </main>
         </div>
       </div>
     </div>
