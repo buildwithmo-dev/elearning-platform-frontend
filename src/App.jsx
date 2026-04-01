@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Analytics } from "@vercel/analytics/next"
 import { Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage.jsx';
 import Auth from './pages/Auth';

@@ -68,6 +68,7 @@ const Footer = () => {
               <input
                 type="email"
                 placeholder="Email address"
+                mailto=""
                 className="w-full bg-transparent px-2 py-2 text-sm text-white placeholder-gray-500 focus:outline-none"
               />
 
