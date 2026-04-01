@@ -12,26 +12,41 @@ const StudentDashboard = ({ isDesktop }) => {
   }, [token]);
 
   return (
-    <div className="row">
+    <div className="flex min-h-screen bg-gray-50">
+      
+      {/* Sidebar */}
       {isDesktop && (
-        <div className="col-sm-3 bg-light p-3">
-          <h6>Student Menu</h6>
-          <ul>
-            <li>My Classes</li>
-            <li>Assignments</li>
-            <li>Progress</li>
+        <div className="w-64 bg-white border-r p-6">
+          <h6 className="text-sm font-semibold text-gray-500 uppercase mb-4">
+            Student Menu
+          </h6>
+          <ul className="space-y-3 text-gray-700">
+            <li className="hover:text-blue-600 cursor-pointer">My Classes</li>
+            <li className="hover:text-blue-600 cursor-pointer">Assignments</li>
+            <li className="hover:text-blue-600 cursor-pointer">Progress</li>
           </ul>
         </div>
       )}
 
-      <div className="col-sm-9 p-3">
-        <h3>Student Dashboard</h3>
-        {courses.map((course) => (
-          <div key={course.id} className="card mb-2 p-2">
-            <h5>{course.title}</h5>
-            <p>{course.description}</p>
-          </div>
-        ))}
+      {/* Main Content */}
+      <div className="flex-1 p-6">
+        <h3 className="text-2xl font-bold mb-6">Student Dashboard</h3>
+
+        <div className="space-y-4">
+          {courses.map((course) => (
+            <div
+              key={course.id}
+              className="bg-white rounded-xl shadow-sm p-4 border hover:shadow-md transition"
+            >
+              <h5 className="text-lg font-semibold text-gray-900">
+                {course.title}
+              </h5>
+              <p className="text-gray-600 mt-1 text-sm">
+                {course.description}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

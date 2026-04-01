@@ -2,121 +2,179 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase/supabaseClient';
 import { useAuth } from '../hooks/AuthContext';
 import { User, Mail, ShieldCheck, CheckCircle, Loader2, Camera } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function ProfileTab() {
-    const { userProfile } = useAuth();
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState({ type: '', text: '' });
-    
-    // State for form fields
-    const [fullName, setFullName] = useState('');
+  const { userProfile } = useAuth();
 
-    // Sync local state when userProfile loads
-    useEffect(() => {
-        if (userProfile) {
-            setFullName(userProfile.full_name || '');
-        }
-    }, [userProfile]);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [fullName, setFullName] = useState('');
 
-    const handleUpdateProfile = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setMessage({ type: '', text: '' });
+  useEffect(() => {
+    if (userProfile) {
+      setFullName(userProfile.full_name || '');
+    }
+  }, [userProfile]);
 
-        try {
-            const { error } = await supabase
-                .from('profiles')
-                .update({ 
-                    full_name: fullName,
-                    updated_at: new Date() 
-                })
-                .eq('id', userProfile.id);
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage(null);
 
-            if (error) throw error;
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: fullName,
+          updated_at: new Date(),
+        })
+        .eq('id', userProfile.id);
 
-            setMessage({ type: 'success', text: 'Profile updated successfully!' });
-            // Hide success message after 3 seconds
-            setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-        } catch (error) {
-            setMessage({ type: 'danger', text: error.message });
-        } finally {
-            setLoading(false);
-        }
-    };
+      if (error) throw error;
 
-    return (
-        <div className="animate-fade-in">
-            <h5 className="fw-bold mb-1">Public Profile</h5>
-            <p className="text-muted small mb-4">This information will be visible to instructors and other students.</p>
+      setMessage({ type: 'success', text: 'Profile updated successfully' });
 
-            {message.text && (
-                <div className={`alert alert-${message.type} border-0 small d-flex align-items-center gap-2 mb-4 shadow-sm`}>
-                    <CheckCircle size={16} /> {message.text}
-                </div>
-            )}
+      setTimeout(() => setMessage(null), 2500);
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            <div className="row g-4">
-                {/* Profile Photo Section (UI Placeholder) */}
-                <div className="col-md-4 text-center border-end">
-                    <div className="position-relative d-inline-block mb-3">
-                        <div className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style={{ width: '120px', height: '120px' }}>
-                            <User size={60} className="text-primary" />
-                        </div>
-                        <button className="btn btn-sm btn-white border shadow-sm rounded-circle position-absolute bottom-0 end-0 p-2">
-                            <Camera size={14} />
-                        </button>
-                    </div>
-                    <h6 className="fw-bold mb-0">{userProfile?.full_name}</h6>
-                    <span className="badge bg-light text-dark border mt-2 px-3 py-2 rounded-pill small">
-                        {userProfile?.is_instructor ? 'Instructor' : 'Student Account'}
-                    </span>
-                </div>
+  return (
+    <div className="max-w-4xl mx-auto">
 
-                {/* Profile Form */}
-                <div className="col-md-8">
-                    <form onSubmit={handleUpdateProfile}>
-                        <div className="mb-3">
-                            <label className="form-label small fw-bold text-muted">FULL NAME</label>
-                            <div className="input-group bg-light rounded-3 border-0">
-                                <span className="input-group-text bg-transparent border-0"><User size={18} className="text-muted"/></span>
-                                <input 
-                                    type="text" 
-                                    className="form-control bg-transparent border-0 py-2" 
-                                    value={fullName}
-                                    onChange={(e) => setFullName(e.target.value)}
-                                    placeholder="Enter your name"
-                                    required
-                                />
-                            </div>
-                        </div>
+      {/* Header */}
+      <div className="mb-6">
+        <h2 className="text-lg font-bold text-gray-900">Public Profile</h2>
+        <p className="text-sm text-gray-500">
+          This information is visible to others
+        </p>
+      </div>
 
-                        <div className="mb-4">
-                            <label className="form-label small fw-bold text-muted">EMAIL ADDRESS (Read Only)</label>
-                            <div className="input-group bg-light rounded-3 border-0 opacity-75">
-                                <span className="input-group-text bg-transparent border-0"><Mail size={18} className="text-muted"/></span>
-                                <input 
-                                    type="email" 
-                                    className="form-control bg-transparent border-0 py-2" 
-                                    value={userProfile?.email || 'N/A'} 
-                                    disabled
-                                />
-                                <span className="input-group-text bg-transparent border-0 text-success"><ShieldCheck size={18}/></span>
-                            </div>
-                        </div>
+      {/* Alert */}
+      {message && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`
+            mb-5 flex items-center gap-2 px-4 py-3 rounded-xl text-sm
+            ${message.type === 'success'
+              ? 'bg-green-100 text-green-700'
+              : 'bg-red-100 text-red-700'}
+          `}
+        >
+          <CheckCircle size={16} />
+          {message.text}
+        </motion.div>
+      )}
 
-                        <button className="btn btn-primary rounded-pill px-5 fw-bold shadow-sm" disabled={loading}>
-                            {loading ? <Loader2 className="animate-spin" size={18} /> : 'Save Profile'}
-                        </button>
-                    </form>
-                </div>
+      {/* Card */}
+      <div className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6 grid md:grid-cols-3 gap-6">
+
+        {/* Avatar Section */}
+        <div className="flex flex-col items-center text-center border-b md:border-b-0 md:border-r pb-6 md:pb-0 md:pr-6">
+          <div className="relative group">
+            <div className="
+              w-28 h-28 rounded-full
+              bg-blue-100 text-blue-600
+              flex items-center justify-center
+              text-4xl font-bold
+            ">
+              {fullName?.charAt(0)?.toUpperCase() || <User />}
             </div>
 
-            <style>{`
-                .animate-fade-in { animation: fadeIn 0.4s ease-out; }
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-                .animate-spin { animation: spin 1s linear infinite; }
-                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-            `}</style>
+            <button className="
+              absolute bottom-0 right-0
+              bg-white border shadow
+              rounded-full p-2
+              opacity-0 group-hover:opacity-100
+              transition
+            ">
+              <Camera size={14} />
+            </button>
+          </div>
+
+          <h3 className="mt-3 font-semibold text-gray-800">
+            {fullName || 'Your Name'}
+          </h3>
+
+          <span className="mt-2 text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600">
+            {userProfile?.is_instructor ? 'Instructor' : 'Student'}
+          </span>
         </div>
-    );
+
+        {/* Form */}
+        <form
+          onSubmit={handleUpdateProfile}
+          className="md:col-span-2 space-y-5"
+        >
+
+          {/* Name */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase">
+              Full Name
+            </label>
+
+            <div className="
+              mt-1 flex items-center gap-2
+              border rounded-xl px-3 py-2
+              focus-within:ring-2 focus-within:ring-blue-500
+            ">
+              <User size={16} className="text-gray-400" />
+              <input
+                type="text"
+                className="w-full outline-none text-sm"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Enter your name"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase">
+              Email Address
+            </label>
+
+            <div className="
+              mt-1 flex items-center gap-2
+              border rounded-xl px-3 py-2 bg-gray-50
+            ">
+              <Mail size={16} className="text-gray-400" />
+              <input
+                type="email"
+                className="w-full bg-transparent text-sm outline-none text-gray-500"
+                value={userProfile?.email || ''}
+                disabled
+              />
+              <ShieldCheck size={16} className="text-green-500" />
+            </div>
+          </div>
+
+          {/* Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="
+              inline-flex items-center gap-2
+              bg-blue-600 text-white
+              px-6 py-2.5 rounded-full
+              text-sm font-semibold
+              hover:bg-blue-700 transition
+              disabled:opacity-50
+            "
+          >
+            {loading && <Loader2 size={16} className="animate-spin" />}
+            Save Changes
+          </button>
+
+        </form>
+      </div>
+    </div>
+  );
 }

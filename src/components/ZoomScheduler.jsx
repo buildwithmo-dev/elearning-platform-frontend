@@ -1,11 +1,11 @@
 import { useState } from "react";
 import axios from "axios";
-import { Video, Calendar, Clock, Link as LinkIcon, Copy, Check } from 'lucide-react';
+import { Video, Calendar, Clock, Link as LinkIcon, Copy, Check } from "lucide-react";
 
 export default function ZoomScheduler() {
   const [topic, setTopic] = useState("");
   const [startTime, setStartTime] = useState("");
-  const [duration, setDuration] = useState("45"); // Default duration
+  const [duration, setDuration] = useState("45");
   const [meetingInfo, setMeetingInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -27,37 +27,50 @@ export default function ZoomScheduler() {
     setLoading(true);
 
     try {
-      const response = await axios.post(
+      const res = await axios.post(
         "http://localhost:8000/api/zoom/create-meeting/",
         { topic, start_time: startTime, duration }
       );
-      setMeetingInfo(response.data);
+      setMeetingInfo(res.data);
     } catch (err) {
-      setError(err.response?.data?.error || "Connection to Zoom API failed");
+      setError(err.response?.data?.error || err.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container py-5" style={{ maxWidth: '600px' }}>
-      <div className="card border-0 shadow-lg rounded-4 overflow-hidden">
-        <div className="bg-primary p-4 text-white text-center">
-          <Video size={40} className="mb-2" />
-          <h3 className="fw-bold mb-0">Zoom Scheduler</h3>
-          <p className="small opacity-75 mb-0">Create live sessions for your students</p>
+    <div className="max-w-xl mx-auto py-10 px-4">
+      <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        
+        {/* Header */}
+        <div className="bg-blue-600 text-white text-center p-6">
+          <Video size={40} className="mx-auto mb-2" />
+          <h2 className="text-xl font-bold">Zoom Scheduler</h2>
+          <p className="text-sm opacity-80">
+            Create live sessions for your students
+          </p>
         </div>
 
-        <div className="card-body p-4">
-          {error && <div className="alert alert-danger border-0 small">{error}</div>}
+        {/* Body */}
+        <div className="p-6 space-y-4">
 
-          <div className="mb-3">
-            <label className="form-label fw-semibold small text-uppercase text-muted">Meeting Topic</label>
-            <div className="input-group">
-              <span className="input-group-text bg-light border-end-0"><Video size={16} /></span>
+          {error && (
+            <div className="bg-red-100 text-red-600 text-sm p-3 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          {/* Topic */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase">
+              Meeting Topic
+            </label>
+            <div className="flex items-center mt-1 bg-gray-100 rounded-lg px-3">
+              <Video size={16} className="text-gray-500" />
               <input
                 type="text"
-                className="form-control bg-light border-start-0"
+                className="w-full bg-transparent p-2 outline-none"
                 placeholder="e.g. Advanced React Patterns"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
@@ -65,26 +78,33 @@ export default function ZoomScheduler() {
             </div>
           </div>
 
-          <div className="row">
-            <div className="col-md-7 mb-3">
-              <label className="form-label fw-semibold small text-uppercase text-muted">Start Date & Time</label>
-              <div className="input-group">
-                <span className="input-group-text bg-light border-end-0"><Calendar size={16} /></span>
+          {/* Time + Duration */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">
+                Start Time
+              </label>
+              <div className="flex items-center mt-1 bg-gray-100 rounded-lg px-3">
+                <Calendar size={16} className="text-gray-500" />
                 <input
                   type="datetime-local"
-                  className="form-control bg-light border-start-0"
+                  className="w-full bg-transparent p-2 outline-none"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
                 />
               </div>
             </div>
-            <div className="col-md-5 mb-3">
-              <label className="form-label fw-semibold small text-uppercase text-muted">Duration (Min)</label>
-              <div className="input-group">
-                <span className="input-group-text bg-light border-end-0"><Clock size={16} /></span>
-                <select 
-                  className="form-select bg-light border-start-0" 
-                  value={duration} 
+
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">
+                Duration
+              </label>
+              <div className="flex items-center mt-1 bg-gray-100 rounded-lg px-3">
+                <Clock size={16} className="text-gray-500" />
+                <select
+                  className="w-full bg-transparent p-2 outline-none"
+                  value={duration}
                   onChange={(e) => setDuration(e.target.value)}
                 >
                   <option value="15">15 min</option>
@@ -97,47 +117,65 @@ export default function ZoomScheduler() {
             </div>
           </div>
 
+          {/* Button */}
           <button
-            className="btn btn-primary w-100 py-2 fw-bold mt-2"
             onClick={handleScheduleMeeting}
             disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold flex items-center justify-center"
           >
             {loading ? (
-              <span className="spinner-border spinner-border-sm me-2"></span>
-            ) : "Generate Zoom Meeting"}
+              <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+            ) : (
+              "Generate Zoom Meeting"
+            )}
           </button>
 
+          {/* Result */}
           {meetingInfo && (
-            <div className="mt-4 animate-fade-in">
-              <div className="p-3 border rounded-3 bg-success bg-opacity-10 border-success border-opacity-20">
-                <div className="d-flex align-items-center mb-3 text-success">
-                  <CheckCircle size={20} className="me-2" />
-                  <h6 className="mb-0 fw-bold">Meeting Successfully Scheduled</h6>
-                </div>
-                
-                <div className="mb-3">
-                  <label className="small fw-bold text-muted text-uppercase">Student Join Link</label>
-                  <div className="input-group">
-                    <input readOnly className="form-control form-control-sm bg-white" value={meetingInfo.join_url} />
-                    <button className="btn btn-outline-secondary btn-sm" onClick={() => copyToClipboard(meetingInfo.join_url)}>
-                      {copied ? <Check size={14} /> : <Copy size={14} />}
-                    </button>
-                  </div>
-                </div>
-
-                <a 
-                  href={meetingInfo.start_url} 
-                  target="_blank" 
-                  className="btn btn-success w-100 d-flex align-items-center justify-content-center gap-2"
-                >
-                  Start Meeting as Host <LinkIcon size={16} />
-                </a>
-                <p className="text-center x-small text-muted mt-2 mb-0">
-                  Only the instructor can use the "Start" link.
-                </p>
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl animate-fade-in">
+              
+              <div className="flex items-center text-green-600 mb-3">
+                <Check size={18} className="mr-2" />
+                <span className="font-semibold text-sm">
+                  Meeting Successfully Scheduled
+                </span>
               </div>
+
+              {/* Join Link */}
+              <div className="mb-3">
+                <label className="text-xs font-semibold text-gray-500 uppercase">
+                  Student Join Link
+                </label>
+                <div className="flex mt-1">
+                  <input
+                    readOnly
+                    value={meetingInfo.join_url}
+                    className="flex-1 text-sm p-2 border rounded-l-lg"
+                  />
+                  <button
+                    onClick={() => copyToClipboard(meetingInfo.join_url)}
+                    className="px-3 border border-l-0 rounded-r-lg bg-gray-100"
+                  >
+                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                  </button>
+                </div>
+              </div>
+
+              <a
+                href={meetingInfo.start_url}
+                target="_blank"
+                rel="noreferrer"
+                className="block w-full text-center bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-semibold"
+              >
+                Start Meeting as Host
+              </a>
+
+              <p className="text-xs text-gray-500 text-center mt-2">
+                Only the instructor can use the start link.
+              </p>
             </div>
           )}
+
         </div>
       </div>
     </div>

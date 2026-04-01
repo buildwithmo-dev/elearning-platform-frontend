@@ -1,75 +1,100 @@
-import React, { useState } from 'react';
-import SecurityTab from '../components/SecurityTab';
-import NotificationsTab from '../components/NotificationsTab';
-import ProfileTab from '../components/ProfileTab'; 
-import { Shield, Bell, User } from 'lucide-react';
-import { useAuth } from '../hooks/AuthContext';
+import React, { useState } from "react";
+import SecurityTab from "../components/SecurityTab";
+import NotificationsTab from "../components/NotificationsTab";
+import ProfileTab from "../components/ProfileTab";
+import { Shield, Bell, User } from "lucide-react";
+import { useAuth } from "../hooks/AuthContext";
 
-const SettingsPage = () => {
+const tabs = [
+  { key: "profile", label: "Profile", icon: User },
+  { key: "security", label: "Security", icon: Shield },
+  { key: "notifications", label: "Notifications", icon: Bell },
+];
+
+export default function SettingsPage() {
   const { userProfile } = useAuth();
-  
-  const [activeTab, setActiveTab] = useState('profile'); 
+  const [activeTab, setActiveTab] = useState("profile");
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'profile': 
-        return <ProfileTab />; 
-      case 'security': 
+      case "profile":
+        return <ProfileTab />;
+      case "security":
         return <SecurityTab />;
-      case 'notifications': 
+      case "notifications":
         return <NotificationsTab userId={userProfile?.id} />;
-      default: 
+      default:
         return <ProfileTab />;
     }
   };
 
   return (
-    <div className="container py-5" style={{ marginTop: '70px' }}>
-      <div className="row g-4">
-        {/* Settings Sidebar */}
-        <div className="col-lg-3">
-          <div className="card border-0 shadow-sm rounded-4 p-3">
-            <h5 className="fw-bold mb-4 px-3">Settings</h5>
-            <div className="nav flex-column nav-pills gap-2">
-              <button 
-                onClick={() => setActiveTab('profile')}
-                className={`nav-link border-0 text-start d-flex align-items-center gap-3 p-3 rounded-3 transition-all ${activeTab === 'profile' ? 'active shadow-sm text-white' : 'text-muted hover-bg-light'}`}
-              >
-                <User size={18} /> Profile Info
-              </button>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-24 px-6 lg:px-12">
 
-              <button 
-                onClick={() => setActiveTab('security')}
-                className={`nav-link border-0 text-start d-flex align-items-center gap-3 p-3 rounded-3 transition-all ${activeTab === 'security' ? 'active shadow-sm text-white' : 'text-muted hover-bg-light'}`}
-              >
-                <Shield size={18} /> Security
-              </button>
-              
-              <button 
-                onClick={() => setActiveTab('notifications')}
-                className={`nav-link border-0 text-start d-flex align-items-center gap-3 p-3 rounded-3 transition-all ${activeTab === 'notifications' ? 'active shadow-sm text-white' : 'text-muted hover-bg-light'}`}
-              >
-                <Bell size={18} /> Notifications
-              </button>
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+        {/* SIDEBAR */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-24 backdrop-blur-xl bg-white/70 border border-white/40 shadow-xl rounded-3xl p-5">
+
+            <h2 className="text-lg font-semibold text-gray-800 mb-5 px-2">
+              Settings
+            </h2>
+
+            <div className="space-y-2">
+              {tabs.map(({ key, label, icon: Icon }) => (
+                <button
+                  key={key}
+                  onClick={() => setActiveTab(key)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
+                    ${
+                      activeTab === key
+                        ? "bg-black text-white shadow-md"
+                        : "text-gray-600 hover:bg-white hover:shadow-sm"
+                    }`}
+                >
+                  <Icon size={18} />
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Main Content Area */}
-        <div className="col-lg-9">
-          <div className="card border-0 shadow-sm rounded-4 p-4 min-vh-50">
-            {renderTabContent()}
+        {/* MAIN CONTENT */}
+        <div className="lg:col-span-3">
+
+          {/* HEADER */}
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 capitalize">
+              {activeTab}
+            </h1>
+            <p className="text-sm text-gray-500">
+              Manage your account settings and preferences
+            </p>
+          </div>
+
+          {/* PANEL */}
+          <div className="bg-white/80 backdrop-blur border border-gray-200 rounded-3xl p-6 shadow-sm min-h-[500px] transition-all">
+
+            {/* subtle fade animation */}
+            <div key={activeTab} className="animate-[fadeIn_.25s_ease]">
+              {renderTabContent()}
+            </div>
+
           </div>
         </div>
       </div>
 
-      <style>{`
-        .nav-link.active { background-color: #0d6efd !important; color: white !important; }
-        .hover-bg-light:hover { background-color: #f8f9fa; }
-        .transition-all { transition: all 0.2s ease-in-out; }
-      `}</style>
+      {/* animation */}
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+        `}
+      </style>
     </div>
   );
-};
-
-export default SettingsPage;
+}

@@ -1,8 +1,12 @@
-import axios from 'axios';
-import { useState, useEffect } from 'react';
+import axios from "axios";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { BookOpen } from "lucide-react";
 
 export default function Categories() {
   const api = "http://127.0.0.1:8000/api/courses/categories/";
+  const navigate = useNavigate();
 
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,11 +15,10 @@ export default function Categories() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        setLoading(true);
         const res = await axios.get(api);
         setCategories(res.data);
-      } catch (err) {
-        setError("Failed to load categories. Please try again later.");
+      } catch {
+        setError("Failed to load categories.");
       } finally {
         setLoading(false);
       }
@@ -24,63 +27,117 @@ export default function Categories() {
   }, []);
 
   return (
-    <div className="container py-4">
-      <div className="row g-3"> {/* g-3 adds consistent gutter spacing */}
-        
-        {/* Loading State */}
-        {loading && (
-          <div className="text-center w-100 py-5">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && (
-          <div className="col-12">
-            <div className="alert alert-danger text-center" role="alert">
-              {error}
-            </div>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!loading && !error && categories.length === 0 && (
-          <div className="text-center w-100 text-muted">
-            <p>No categories available at the moment.</p>
-          </div>
-        )}
-
-        {/* Data Grid */}
-        {!loading && categories.slice(0, 8).map((cat) => (
-          <div key={cat.id} className="col-6 col-md-4 col-lg-3">
-            <div 
-              className="card h-100 shadow-sm border-0 category-card"
-              style={{
-                cursor: 'pointer',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                borderRadius: '12px',
-                minHeight: '100px'
-              }}
-              // Simple hover effect via inline JS if you aren't using a separate CSS file
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-5px)';
-                e.currentTarget.style.shadow = '0 10px 20px rgba(0,0,0,0.1)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              <div className="card-body d-flex align-items-center justify-content-center p-3">
-                <h6 className="card-title text-center mb-0 fw-bold text-dark">
-                  {cat.title}
-                </h6>
-              </div>
-            </div>
-          </div>
-        ))}
+    <section className="w-full px-4 md:px-8 py-14">
+      
+      {/* HEADER */}
+      <div className="mb-10 flex items-end justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">
+            Explore Categories
+          </h2>
+          <p className="text-gray-500 mt-1">
+            Discover your next skill path
+          </p>
+        </div>
       </div>
-    </div>
+
+      {/* ERROR */}
+      {error && (
+        <div className="text-center text-red-500 py-6">
+          {error}
+        </div>
+      )}
+
+      {/* GRID */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+
+        {/* SKELETON */}
+        {loading &&
+          Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-32 rounded-2xl bg-gray-200 animate-pulse"
+            />
+          ))}
+
+        {/* EMPTY */}
+        {!loading && categories.length === 0 && (
+          <div className="col-span-full text-center text-gray-500">
+            No categories available
+          </div>
+        )}
+
+        {/* CATEGORY CARDS */}
+        {!loading &&
+          categories.slice(0, 8).map((cat, index) => (
+            <motion.div
+              key={cat.id}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              onClick={() =>
+                navigate(`/courses?category=${cat.title}`)
+              }
+              className="group cursor-pointer"
+            >
+              <div className="
+                relative h-38 rounded-2xl
+                bg-white
+                border border-gray-200
+                p-5
+                flex flex-col justify-between
+                shadow-sm
+                transition-all duration-300
+                hover:-translate-y-1
+                hover:shadow-xl
+                hover:border-black
+              ">
+
+                {/* TOP ICON */}
+                <div className="
+                  w-10 h-10 rounded-lg
+                  bg-gray-100
+                  flex items-center justify-center
+                  group-hover:bg-black
+                  transition
+                ">
+                  <BookOpen
+                    size={18}
+                    className="text-gray-600 group-hover:text-white transition"
+                  />
+                </div>
+
+                {/* TEXT */}
+                <div>
+                  <h3 className="
+  relative z-10
+  font-semibold text-gray-800
+  group-hover:text-blue-600
+  transition
+  text-sm md:text-base
+  leading-snug
+  line-clamp-2
+">
+  {cat.title}
+</h3>
+
+                  <p className="text-xs text-gray-500 mt-1">
+                    Explore courses →
+                  </p>
+                </div>
+
+                {/* HOVER BAR */}
+                <div className="
+                  absolute bottom-0 left-0 h-[2px] w-0
+                  bg-black
+                  group-hover:w-full
+                  transition-all duration-300
+                " />
+
+              </div>
+            </motion.div>
+          ))}
+      </div>
+    </section>
   );
 }

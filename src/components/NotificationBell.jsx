@@ -2,146 +2,157 @@ import React, { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import { supabase } from '../services/supabase/supabaseClient';
 import { useAuth } from '../hooks/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function NotificationBell() {
-    const { userProfile } = useAuth();
-    const [notifications, setNotifications] = useState([]);
-    const [unreadCount, setUnreadCount] = useState(0);
+  const { userProfile } = useAuth();
 
-    useEffect(() => {
-        // --- CRITICAL FIX: Ensure userProfile and userProfile.id exist ---
-        if (!userProfile?.id) {
-            setNotifications([]);
-            setUnreadCount(0);
-            return;
-        }
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [open, setOpen] = useState(false);
 
-        const fetchNotifications = async () => {
-            try {
-                const { data, error } = await supabase
-                    .from('notifications')
-                    .select('*')
-                    .eq('user_id', userProfile.id)
-                    .eq('is_read', false)
-                    .order('created_at', { ascending: false });
-                
-                if (error) throw error;
+  useEffect(() => {
+    if (!userProfile?.id) return;
 
-                if (data) {
-                    setNotifications(data);
-                    setUnreadCount(data.length);
-                }
-            } catch (err) {
-                console.error("Failed to fetch notifications:", err.message);
-            }
-        };
+    const fetchNotifications = async () => {
+      const { data } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userProfile.id)
+        .eq('is_read', false)
+        .order('created_at', { ascending: false });
 
-        fetchNotifications();
-
-        const channel = supabase
-            .channel(`user-notifications-${userProfile.id}`) // Use unique channel name
-            .on('postgres_changes', { 
-                event: 'INSERT', 
-                schema: 'public', 
-                table: 'notifications',
-                filter: `user_id=eq.${userProfile.id}` 
-            }, (payload) => {
-                setNotifications(prev => [payload.new, ...prev]);
-                setUnreadCount(prev => prev + 1);
-            })
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [userProfile?.id]); // Watch specifically for the ID change
-
-    const markAllAsRead = async () => {
-        if (!userProfile?.id) return;
-
-        const { error } = await supabase
-            .from('notifications')
-            .update({ is_read: true })
-            .eq('user_id', userProfile.id);
-        
-        if (!error) {
-            setUnreadCount(0);
-            setNotifications([]);
-        }
+      if (data) {
+        setNotifications(data);
+        setUnreadCount(data.length);
+      }
     };
 
-    return (
-        <div className="dropdown">
-            <button 
-                className="btn border-0 p-1 position-relative shadow-none" 
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-            >
-                <Bell size={22} className="text-white opacity-75 hover-opacity-100 transition-all" />
-                {unreadCount > 0 && (
-                    <span 
-                        className="position-absolute translate-middle badge rounded-pill bg-danger border border-dark" 
-                        style={{ 
-                            fontSize: '9px', 
-                            top: '5px', 
-                            left: '85%',
-                            padding: '0.35em 0.5em'
-                        }}
-                    >
-                        {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                )}
-            </button>
+    fetchNotifications();
 
-            <ul 
-                className="dropdown-menu dropdown-menu-end shadow-lg border-0 py-0 overflow-hidden animate-fade-in" 
-                style={{ width: '320px', borderRadius: '16px', marginTop: '15px' }}
-            >
-                <li className="p-3 border-bottom d-flex justify-content-between align-items-center bg-white">
-                    <span className="fw-bold text-dark">Notifications</span>
-                    {unreadCount > 0 && (
-                        <button 
-                            className="btn btn-link btn-sm text-primary text-decoration-none p-0 fw-semibold" 
-                            onClick={markAllAsRead}
-                            style={{ fontSize: '12px' }}
-                        >
-                            Mark all read
-                        </button>
-                    )}
-                </li>
+    const channel = supabase
+      .channel(`user-${userProfile.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userProfile.id}`,
+        },
+        (payload) => {
+          setNotifications((prev) => [payload.new, ...prev]);
+          setUnreadCount((prev) => prev + 1);
+        }
+      )
+      .subscribe();
 
-                <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
-                    {notifications.length === 0 ? (
-                        <li className="p-5 text-center text-muted">
-                            <Bell size={32} className="opacity-25 mb-2" />
-                            <p className="small mb-0">No new notifications</p>
-                        </li>
-                    ) : (
-                        notifications.map(n => (
-                            <li key={n.id} className="p-3 border-bottom dropdown-item" style={{ whiteSpace: 'normal' }}>
-                                <div className="fw-bold small text-dark mb-1">{n.title}</div>
-                                <div className="text-muted" style={{ fontSize: '13px', lineHeight: '1.4' }}>{n.message}</div>
-                                <div className="text-primary mt-1" style={{ fontSize: '10px' }}>
-                                    {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </div>
-                            </li>
-                        ))
-                    )}
+    return () => supabase.removeChannel(channel);
+  }, [userProfile?.id]);
+
+  const markAllAsRead = async () => {
+    if (!userProfile?.id) return;
+
+    await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('user_id', userProfile.id);
+
+    setNotifications([]);
+    setUnreadCount(0);
+  };
+
+  return (
+    <div className="relative">
+
+      {/* Bell */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="relative p-2 rounded-full hover:bg-white/10 transition"
+      >
+        <Bell className="text-white" size={22} />
+
+        {unreadCount > 0 && (
+          <span className="
+            absolute -top-1 -right-1
+            bg-red-500 text-white text-[10px]
+            px-1.5 py-0.5 rounded-full
+            font-semibold
+          ">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {/* Panel */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 15 }}
+            className="
+              absolute right-0 mt-3 w-80
+              bg-white rounded-2xl shadow-2xl
+              border border-gray-200 overflow-hidden
+            "
+          >
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <h4 className="text-sm font-semibold text-gray-800">
+                Notifications
+              </h4>
+
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  className="text-xs text-blue-600 hover:underline"
+                >
+                  Mark all read
+                </button>
+              )}
+            </div>
+
+            {/* Content */}
+            <div className="max-h-80 overflow-y-auto">
+
+              {notifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+                  <Bell size={28} className="mb-2 opacity-40" />
+                  <p className="text-sm">No new notifications</p>
                 </div>
-            </ul>
+              ) : (
+                notifications.map((n) => (
+                  <div
+                    key={n.id}
+                    className="
+                      px-4 py-3 border-b last:border-none
+                      hover:bg-gray-50 transition cursor-pointer
+                    "
+                  >
+                    <p className="text-sm font-semibold text-gray-800">
+                      {n.title}
+                    </p>
 
-            <style>{`
-                .hover-opacity-100:hover { opacity: 1 !important; }
-                .animate-fade-in {
-                    animation: fadeIn 0.2s ease-out;
-                }
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                /* Hide default dropdown arrow */
-                .dropdown-toggle::after { display: none; }
-            `}</style>
-        </div>
-    );
+                    <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                      {n.message}
+                    </p>
+
+                    <span className="text-[10px] text-blue-500 mt-1 block">
+                      {new Date(n.created_at).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
+                ))
+              )}
+
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }

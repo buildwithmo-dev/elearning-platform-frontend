@@ -1,156 +1,171 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Settings, LogOut, Menu, User, BookOpen, PlayCircle } from 'lucide-react'; // Added PlayCircle icon
+import { useState } from 'react';
+import { 
+  Settings, LogOut, Menu, User, BookOpen, PlayCircle 
+} from 'lucide-react';
 import { useAuth } from '../hooks/AuthContext';
 import NotificationBell from './NotificationBell';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Nav = () => {
-    const { userProfile, loading, logout } = useAuth();
-    const navigate = useNavigate();
-    
-    const getUserInitial = () => {
-        if (userProfile?.full_name) return userProfile.full_name.charAt(0).toUpperCase();
-        return '?';
-    };
+  const { userProfile, loading, logout } = useAuth();
+  const navigate = useNavigate();
 
-    const handleLogout = async () => {
-        try {
-            await logout();
-            navigate('/');
-        } catch (err) {
-            console.error("Logout failed:", err);
-        }
-    };
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-    return (
-        <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow-sm py-2">
-            <div className="container d-flex align-items-center">
-                
-                {/* --- Left: Logo & Menu Toggler --- */}
-                <div className="d-flex align-items-center me-auto">
-                    <button
-                        className="navbar-toggler border-0 p-0 me-3"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#navbarNav"
+  const getUserInitial = () => {
+    return userProfile?.full_name?.charAt(0).toUpperCase() || '?';
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
+
+  return (
+    <nav className="fixed top-0 w-full z-50 backdrop-blur bg-[#020617]/80 border-b border-gray-800">
+
+      <div className="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between h-16">
+
+        {/* Logo */}
+        <Link to="/" className="text-xl font-bold text-white">
+          dlp<span className="text-blue-500">.</span>
+        </Link>
+
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-6">
+          <Link to="/courses" className="text-gray-300 hover:text-white transition">
+            Browse Courses
+          </Link>
+        </div>
+
+        {/* Right */}
+        <div className="flex items-center gap-3">
+
+          {loading ? (
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : userProfile ? (
+            <>
+              <NotificationBell />
+
+              {/* Avatar */}
+              <div className="relative">
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="w-9 h-9 rounded-full bg-blue-600 text-white font-semibold flex items-center justify-center hover:scale-105 transition"
+                >
+                  {getUserInitial()}
+                </button>
+
+                {/* Dropdown */}
+                <AnimatePresence>
+                  {dropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute right-0 mt-3 w-60 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden"
                     >
-                        <Menu size={24} color="white" />
-                    </button>
-                    <Link className="navbar-brand fw-bold fs-3 text-uppercase m-0" to="/">
-                        dlp<span className="text-primary">.</span>
-                    </Link>
-                </div>
 
-                {/* --- Center: Collapsible Menu --- */}
-                <div className="collapse navbar-collapse justify-content-center" id="navbarNav">
-                    <ul className="navbar-nav">
-                        <li className="nav-item">
-                            <Link className="nav-link px-3 fw-medium" to="/courses">Browse Courses</Link>
-                        </li>
-                    </ul>
-                </div>
+                      <div className="px-4 py-3 border-b">
+                        <p className="text-xs text-gray-500">Signed in as</p>
+                        <p className="text-sm font-semibold text-gray-800 truncate">
+                          {userProfile.full_name}
+                        </p>
+                      </div>
 
-                {/* --- Right: Action Icons (Always Visible) --- */}
-                <div className="d-flex align-items-center gap-2 gap-md-3 ms-auto">
-                    {loading ? (
-                        <div className="spinner-border spinner-border-sm text-light" role="status"></div>
-                    ) : userProfile ? (
-                        <>
-                            <NotificationBell />
+                      <div className="p-2 space-y-1 text-sm">
 
-                            <div className="dropdown">
-                                <a
-                                    className="d-flex align-items-center p-0 no-caret"
-                                    href="#"
-                                    role="button"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false"
-                                >
-                                    <div className="d-flex justify-content-center align-items-center border border-light border-opacity-25 bg-primary text-white fw-bold shadow-sm user-avatar">
-                                        {getUserInitial()}
-                                    </div>
-                                </a>
-
-                                <ul className="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-3 p-2 animate-fade-in">
-                                    <li className="px-3 py-2 border-bottom mb-2">
-                                        <p className="small text-muted mb-0">Signed in as</p>
-                                        <p className="fw-bold mb-0 text-dark text-truncate" style={{ maxWidth: '180px' }}>
-                                            {userProfile.full_name}
-                                        </p>
-                                    </li>
-
-                                    {/* STUDENT TAB: My Courses */}
-                                    <li>
-                                        <Link className="dropdown-item rounded-3 d-flex align-items-center gap-2 py-2" to="/my-courses">
-                                            <PlayCircle size={16} className="text-primary" /> 
-                                            <span className="fw-medium">My Learning</span>
-                                        </Link>
-                                    </li>
-
-                                    <li>
-                                        <Link className="dropdown-item rounded-3 d-flex align-items-center gap-2 py-2" to="/user-page">
-                                            <User size={16} /> Profile
-                                        </Link>
-                                    </li>
-                                    
-                                    {userProfile.is_instructor && (
-                                        <li>
-                                            <Link className="dropdown-item rounded-3 d-flex align-items-center gap-2 py-2" to="/instructors-page">
-                                                <BookOpen size={16} /> Instructor Studio
-                                            </Link>
-                                        </li>
-                                    )}
-
-                                    <li>
-                                        <Link className="dropdown-item rounded-3 d-flex align-items-center gap-2 py-2" to="/settings">
-                                            <Settings size={16} /> Settings
-                                        </Link>
-                                    </li>
-
-                                    <li><hr className="dropdown-divider opacity-10" /></li>
-                                    <li>
-                                        <button
-                                            className="dropdown-item rounded-3 d-flex align-items-center gap-2 py-2 text-danger"
-                                            onClick={handleLogout}
-                                        >
-                                            <LogOut size={16} /> Sign Out
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>
-                        </>
-                    ) : (
-                        <Link to="/auth" className="btn btn-primary btn-sm rounded-pill px-4 fw-bold shadow-sm">
-                            Sign In
+                        <Link
+                          to="/my-courses"
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100"
+                        >
+                          <PlayCircle size={16} className="text-blue-500" />
+                          My Learning
                         </Link>
-                    )}
-                </div>
-            </div>
 
-            <style>{`
-                .no-caret::after { display: none !important; }
-                .user-avatar { width: 35px; height: 35px; border-radius: 50%; font-size: 0.85rem; transition: all 0.2s; }
-                .user-avatar:hover { transform: scale(1.05); filter: brightness(1.1); }
-                
-                @media (max-width: 991.98px) {
-                    .navbar-collapse {
-                        position: absolute;
-                        top: 100%; left: 0; right: 0;
-                        background-color: #212529;
-                        padding: 1.5rem;
-                        z-index: 1000;
-                        border-bottom: 1px solid rgba(255,255,255,0.1);
-                        box-shadow: 0 10px 15px rgba(0,0,0,0.3);
-                    }
-                }
-                .dropdown-menu { border-radius: 14px; min-width: 220px; border: 1px solid rgba(0,0,0,0.05) !important; }
-                .animate-fade-in { animation: fadeIn 0.2s ease-out; }
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
-        </nav>
-    );
+                        <Link
+                          to="/user-page"
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100"
+                        >
+                          <User size={16} />
+                          Profile
+                        </Link>
+
+                        {userProfile.is_instructor && (
+                          <Link
+                            to="/instructors-page"
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100"
+                          >
+                            <BookOpen size={16} />
+                            Instructor Studio
+                          </Link>
+                        )}
+
+                        <Link
+                          to="/settings"
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100"
+                        >
+                          <Settings size={16} />
+                          Settings
+                        </Link>
+
+                        <div className="border-t my-1" />
+
+                        <button
+                          onClick={handleLogout}
+                          className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-lg text-red-500 hover:bg-red-50"
+                        >
+                          <LogOut size={16} />
+                          Sign Out
+                        </button>
+
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </>
+          ) : (
+            <Link
+              to="/auth"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-full font-semibold shadow-md transition"
+            >
+              Sign In
+            </Link>
+          )}
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="md:hidden text-white"
+          >
+            <Menu size={24} />
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ height: 0 }}
+            animate={{ height: "auto" }}
+            exit={{ height: 0 }}
+            className="md:hidden bg-[#020617] border-t border-gray-800 px-4 py-4"
+          >
+            <Link
+              to="/courses"
+              className="block py-2 text-gray-300 hover:text-white"
+            >
+              Browse Courses
+            </Link>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </nav>
+  );
 };
 
 export default Nav;

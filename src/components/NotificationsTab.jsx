@@ -1,105 +1,170 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase/supabaseClient';
 import { Bell, Mail, Megaphone, Loader2, Info } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function NotificationsTab({ userId }) {
-    const [loading, setLoading] = useState(true);
-    const [syncing, setSyncing] = useState(false);
-    const [settings, setSettings] = useState({
-        email_notifications: true,
-        course_updates: true,
-        marketing_emails: false
-    });
+  const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
 
-    useEffect(() => {
-        async function loadSettings() {
-            if (!userId) return;
-            const { data } = await supabase
-                .from('notification_settings')
-                .select('*')
-                .eq('user_id', userId)
-                .single();
-            if (data) setSettings(data);
-            setLoading(false);
-        }
-        loadSettings();
-    }, [userId]);
+  const [settings, setSettings] = useState({
+    email_notifications: true,
+    course_updates: true,
+    marketing_emails: false,
+  });
 
-    const toggle = async (key) => {
-        const newValue = !settings[key];
-        setSettings(prev => ({ ...prev, [key]: newValue })); // Optimistic update
-        setSyncing(true);
+  useEffect(() => {
+    async function loadSettings() {
+      if (!userId) return;
 
-        const { error } = await supabase
-            .from('notification_settings')
-            .upsert({ user_id: userId, [key]: newValue });
+      const { data } = await supabase
+        .from('notification_settings')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
 
-        if (error) console.error("Sync Error:", error.message);
-        setTimeout(() => setSyncing(false), 600);
-    };
+      if (data) setSettings(data);
+      setLoading(false);
+    }
 
-    if (loading) return <div className="text-center py-5"><Loader2 className="animate-spin text-primary" /></div>;
+    loadSettings();
+  }, [userId]);
 
+  const toggle = async (key) => {
+    const newValue = !settings[key];
+
+    setSettings((prev) => ({ ...prev, [key]: newValue }));
+    setSyncing(true);
+
+    await supabase
+      .from('notification_settings')
+      .upsert({ user_id: userId, [key]: newValue });
+
+    setTimeout(() => setSyncing(false), 500);
+  };
+
+  if (loading) {
     return (
-        <div className="animate-fade-in">
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h5 className="fw-bold mb-1">Notifications</h5>
-                    <p className="text-muted small mb-0">Manage how we reach you.</p>
-                </div>
-                {syncing && <span className="badge bg-primary bg-opacity-10 text-primary border-0 rounded-pill px-3 py-2 small">Syncing...</span>}
-            </div>
-
-            <div className="card border-0 bg-light rounded-4 overflow-hidden">
-                <NotificationItem 
-                    icon={<Mail size={18}/>} 
-                    color="primary"
-                    title="Email Alerts" 
-                    desc="Security notices and account login alerts."
-                    checked={settings.email_notifications}
-                    onToggle={() => toggle('email_notifications')}
-                />
-                <NotificationItem 
-                    icon={<Bell size={18}/>} 
-                    color="success"
-                    title="Course Progress" 
-                    desc="New lessons, assignments, and instructor replies."
-                    checked={settings.course_updates}
-                    onToggle={() => toggle('course_updates')}
-                />
-                <NotificationItem 
-                    icon={<Megaphone size={18}/>} 
-                    color="warning"
-                    title="Special Offers" 
-                    desc="Discounts on new courses and newsletters."
-                    checked={settings.marketing_emails}
-                    onToggle={() => toggle('marketing_emails')}
-                    isLast={true}
-                />
-            </div>
-
-            <div className="mt-4 p-3 bg-white border rounded-4 d-flex gap-3 align-items-center">
-                <Info size={20} className="text-muted" />
-                <p className="small text-muted mb-0">Push notifications for mobile are currently managed in your browser settings.</p>
-            </div>
-        </div>
+      <div className="flex justify-center py-10">
+        <Loader2 className="animate-spin text-gray-500" />
+      </div>
     );
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto">
+
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h3 className="text-lg font-bold text-gray-900">Notifications</h3>
+          <p className="text-sm text-gray-500">Manage how we reach you</p>
+        </div>
+
+        {syncing && (
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded-full"
+          >
+            Syncing...
+          </motion.span>
+        )}
+      </div>
+
+      {/* Card */}
+      <div className="bg-white border border-gray-200 rounded-3xl shadow-sm overflow-hidden">
+
+        <NotificationItem
+          icon={<Mail size={18} />}
+          color="blue"
+          title="Email Alerts"
+          desc="Security notices and login alerts"
+          checked={settings.email_notifications}
+          onToggle={() => toggle('email_notifications')}
+        />
+
+        <NotificationItem
+          icon={<Bell size={18} />}
+          color="green"
+          title="Course Progress"
+          desc="Lessons, assignments, replies"
+          checked={settings.course_updates}
+          onToggle={() => toggle('course_updates')}
+        />
+
+        <NotificationItem
+          icon={<Megaphone size={18} />}
+          color="amber"
+          title="Special Offers"
+          desc="Discounts and newsletters"
+          checked={settings.marketing_emails}
+          onToggle={() => toggle('marketing_emails')}
+          isLast
+        />
+
+      </div>
+
+      {/* Info */}
+      <div className="mt-6 flex gap-3 items-start p-4 bg-gray-50 border border-gray-200 rounded-2xl">
+        <Info size={18} className="text-gray-400 mt-0.5" />
+        <p className="text-sm text-gray-500">
+          Push notifications are managed by your browser settings.
+        </p>
+      </div>
+    </div>
+  );
 }
 
-// Reusable Switch Component
-const NotificationItem = ({ icon, title, desc, checked, onToggle, color, isLast }) => (
-    <div className={`p-4 d-flex justify-content-between align-items-center ${!isLast ? 'border-bottom' : ''}`}>
-        <div className="d-flex gap-3 align-items-center">
-            <div className={`bg-${color} bg-opacity-10 p-2 rounded-3 text-${color}`}>
-                {icon}
-            </div>
-            <div>
-                <h6 className="fw-bold mb-0 small">{title}</h6>
-                <p className="text-muted mb-0" style={{ fontSize: '12px' }}>{desc}</p>
-            </div>
+/* ---------- Item ---------- */
+
+const NotificationItem = ({
+  icon,
+  title,
+  desc,
+  checked,
+  onToggle,
+  color,
+  isLast
+}) => {
+  return (
+    <div className={`flex items-center justify-between px-5 py-4 ${!isLast && 'border-b'}`}>
+
+      {/* Left */}
+      <div className="flex items-center gap-4">
+        <div className={`
+          p-2 rounded-xl
+          bg-${color}-100 text-${color}-600
+        `}>
+          {icon}
         </div>
-        <div className="form-check form-switch">
-            <input className="form-check-input" type="checkbox" checked={checked} onChange={onToggle} style={{ width: '2.5rem', height: '1.25rem', cursor: 'pointer' }} />
+
+        <div>
+          <h4 className="text-sm font-semibold text-gray-800">
+            {title}
+          </h4>
+          <p className="text-xs text-gray-500">
+            {desc}
+          </p>
         </div>
+      </div>
+
+      {/* Toggle */}
+      <button
+        onClick={onToggle}
+        className={`
+          relative w-11 h-6 rounded-full transition
+          ${checked ? 'bg-blue-600' : 'bg-gray-300'}
+        `}
+      >
+        <span
+          className={`
+            absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition
+            ${checked ? 'translate-x-5' : ''}
+          `}
+        />
+      </button>
+
     </div>
-);
+  );
+};

@@ -1,129 +1,176 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/AuthContext'; 
+import { useAuth } from '../hooks/AuthContext';
 import { supabase } from '../services/supabase/supabaseClient';
 import { User, ShieldCheck, Save, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function InstructorSettingsForm() {
-    const { userProfile, setUserProfile } = useAuth();
-    const [fullName, setFullName] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState(false);
+  const { userProfile, setUserProfile } = useAuth();
 
-    useEffect(() => {
-        if (userProfile) {
-            setFullName(userProfile.full_name || '');
-        }
-    }, [userProfile]);
+  const [fullName, setFullName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
-    const handleUpdate = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
-        setSuccess(false);
+  useEffect(() => {
+    if (userProfile) {
+      setFullName(userProfile.full_name || '');
+    }
+  }, [userProfile]);
 
-        try {
-            // Use the session user ID directly for security
-            const { data: { user } } = await supabase.auth.getUser();
-            
-            if (!user) throw new Error("No authenticated user found");
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess(false);
 
-            const { error: updateError } = await supabase
-                .from('profiles')
-                .update({ 
-                    full_name: fullName, 
-                    updated_at: new Date().toISOString() 
-                })
-                .eq('id', user.id);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No authenticated user");
 
-            if (updateError) throw updateError;
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: fullName,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
 
-            setUserProfile(prev => ({ ...prev, full_name: fullName }));
-            setSuccess(true);
-            
-            // Clear success message after 3 seconds
-            setTimeout(() => setSuccess(false), 3000);
+      if (error) throw error;
 
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+      setUserProfile(prev => ({ ...prev, full_name: fullName }));
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
 
-    return (
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
-            <div className="card-header bg-white border-bottom-0 pt-4 px-4">
-                <h4 className="fw-bold mb-0">Account Settings</h4>
-                <p className="text-muted small">Manage your profile information and status.</p>
-            </div>
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            <div className="card-body p-4 pt-0">
-                {/* Profile Header / Avatar Preview */}
-                <div className="d-flex align-items-center mb-4 p-3 bg-light rounded-3">
-                    <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-4 shadow-sm" style={{ width: '60px', height: '60px' }}>
-                        {fullName.charAt(0).toUpperCase() || <User />}
-                    </div>
-                    <div className="ms-3">
-                        <h6 className="mb-1 fw-bold">{fullName || 'User Name'}</h6>
-                        <span className="badge bg-primary-soft text-primary rounded-pill" style={{ backgroundColor: '#e7f0ff', fontSize: '11px' }}>
-                            {userProfile?.is_instructor ? 'Certified Instructor' : 'Student'}
-                        </span>
-                    </div>
-                </div>
+  return (
+    <div className="w-full max-w-2xl mx-auto bg-white border border-gray-200 rounded-3xl shadow-xl overflow-hidden">
 
-                <form onSubmit={handleUpdate}>
-                    <div className="mb-4">
-                        <label className="form-label fw-semibold small text-uppercase text-muted">Public Name</label>
-                        <div className="input-group">
-                            <span className="input-group-text bg-white border-end-0 text-muted">
-                                <User size={18} />
-                            </span>
-                            <input
-                                type="text"
-                                className="form-control border-start-0 ps-0"
-                                placeholder="Enter your full name"
-                                value={fullName}
-                                onChange={(e) => setFullName(e.target.value)}
-                                required
-                            />
-                        </div>
-                    </div>
+      {/* Header */}
+      <div className="px-6 pt-6 pb-2">
+        <h2 className="text-xl font-bold text-gray-900">
+          Account Settings
+        </h2>
+        <p className="text-gray-500 text-sm">
+          Manage your profile information
+        </p>
+      </div>
 
-                    <div className="mb-4">
-                        <label className="form-label fw-semibold small text-uppercase text-muted">Instructor Authorization</label>
-                        <div className="p-3 border rounded-3 d-flex align-items-center bg-light opacity-75">
-                            <ShieldCheck size={20} className="text-success me-3" />
-                            <div>
-                                <p className="mb-0 small fw-bold">Verified Instructor Account</p>
-                                <p className="mb-0 x-small text-muted">Permission managed by administrator.</p>
-                            </div>
-                        </div>
-                    </div>
+      <div className="px-6 pb-6">
 
-                    <div className="d-flex align-items-center gap-3">
-                        <button 
-                            type="submit" 
-                            className="btn btn-primary px-4 d-flex align-items-center gap-2 rounded-pill shadow-sm"
-                            disabled={loading}
-                        >
-                            {loading ? <Loader2 size={18} className="spinner" /> : <Save size={18} />}
-                            Save Changes
-                        </button>
+        {/* Profile Preview */}
+        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl mb-6">
 
-                        {success && (
-                            <span className="text-success small fw-bold animate-fade-in">
-                                ✓ Updated successfully
-                            </span>
-                        )}
-                        {error && (
-                            <span className="text-danger small">
-                                Error: {error}
-                            </span>
-                        )}
-                    </div>
-                </form>
-            </div>
+          <div className="
+            w-14 h-14 rounded-full
+            bg-blue-600 text-white
+            flex items-center justify-center
+            font-bold text-lg shadow-md
+          ">
+            {fullName ? fullName.charAt(0).toUpperCase() : <User size={20} />}
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-gray-800">
+              {fullName || "User Name"}
+            </h4>
+
+            <span className="
+              inline-block mt-1 text-xs px-3 py-1 rounded-full
+              bg-blue-100 text-blue-600 font-medium
+            ">
+              {userProfile?.is_instructor ? "Certified Instructor" : "Student"}
+            </span>
+          </div>
         </div>
-    );
+
+        {/* Form */}
+        <form onSubmit={handleUpdate} className="space-y-6">
+
+          {/* Name Input */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">
+              Public Name
+            </label>
+
+            <div className="flex items-center border border-gray-300 rounded-xl px-3 focus-within:ring-2 focus-within:ring-blue-500">
+
+              <User size={18} className="text-gray-400" />
+
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Enter your full name"
+                className="w-full px-3 py-2 bg-transparent focus:outline-none text-sm"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Instructor Status */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">
+              Instructor Authorization
+            </label>
+
+            <div className="flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+              <ShieldCheck className="text-green-500" size={20} />
+              <div>
+                <p className="text-sm font-semibold text-gray-800">
+                  Verified Instructor Account
+                </p>
+                <p className="text-xs text-gray-500">
+                  Managed by administrator
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-4">
+
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              type="submit"
+              disabled={loading}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md transition disabled:opacity-50"
+            >
+              {loading ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Save size={18} />
+              )}
+              Save Changes
+            </motion.button>
+
+            {/* Success */}
+            {success && (
+              <motion.span
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-green-600 text-sm font-medium"
+              >
+                ✓ Updated successfully
+              </motion.span>
+            )}
+
+            {/* Error */}
+            {error && (
+              <span className="text-red-500 text-sm">
+                {error}
+              </span>
+            )}
+          </div>
+
+        </form>
+      </div>
+    </div>
+  );
 }
