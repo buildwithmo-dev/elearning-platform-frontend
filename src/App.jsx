@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { Analytics } from "@vercel/analytics/next"
 import { Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage.jsx';
 import Auth from './pages/Auth';
@@ -13,8 +12,8 @@ import SettingsPage from './pages/SettingsPage';
 import ContactSupport from './pages/ContactSupport';
 import StudentCoursesPage from "./pages/StudentCoursesPage";
 import StudentCourseDetailPage from "./pages/StudentCourseDetailPage";
-function App() {
 
+function App() {
   useEffect(() => {
     document.body.style.paddingTop = '60px';
     return () => {
@@ -25,7 +24,6 @@ function App() {
   return (
     <AuthProvider>
       <Nav />
-
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<Auth />} />
@@ -37,7 +35,6 @@ function App() {
         <Route path="/my-courses" element={<StudentCoursesPage />} />
         <Route path="/course/:courseId" element={<StudentCourseDetailPage />} />
       </Routes>
-
       <Footer/>
     </AuthProvider>
   );
